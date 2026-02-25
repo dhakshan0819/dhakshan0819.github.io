@@ -89,115 +89,117 @@
     <div class="section-container">
       <div class="section-header">
         <p class="section-label">About Me</p>
-        <h2 class="section-title">Skills, Tools & Stats</h2>
-        <p class="section-subtitle">A breakdown of my core competencies and the tools I use in the field.</p>
+        <h2 class="section-title">System Monitor</h2>
+        <p class="section-subtitle">Live process view — skills, tools, and stats as a running system.</p>
       </div>
 
-      <div class="about-grid">
-        <!-- Skill Radar -->
-        <div class="card fade-in">
-          <div class="card-header">
-            <div class="card-icon">◈</div>
-            <h3>Proficiency Protocol</h3>
-          </div>
-          <div id="hex-radar-container"
-            style="width: 100%; height: 400px; display: flex; justify-content: center; align-items: center;">
-            <!-- Canvas will be injected here by JS -->
-          </div>
+      <!-- htop-style system monitor -->
+      <div class="sysmon fade-in">
+        <!-- Title bar -->
+        <div class="sysmon-bar">
+          <span class="terminal-dot red"></span>
+          <span class="terminal-dot yellow"></span>
+          <span class="terminal-dot green"></span>
+          <span class="sysmon-title">dhakshan@kali — htop</span>
+          <span class="sysmon-uptime" id="sysmon-uptime">uptime: 6y 0m</span>
         </div>
-        <!-- Terminal -->
-        <div class="card fade-in">
-          <div class="card-header">
-            <div class="card-icon">▸</div>
-            <h3>Terminal</h3>
-          </div>
-          <div class="terminal-window">
-            <div class="terminal-header">
-              <span class="terminal-dot red"></span>
-              <span class="terminal-dot yellow"></span>
-              <span class="terminal-dot green"></span>
-              <span class="terminal-title">dhakshan@kali ~</span>
+
+        <!-- Top split: neofetch + skill meters -->
+        <div class="sysmon-top">
+          <!-- Neofetch pane -->
+          <div class="neofetch-pane">
+            <div class="nf-ascii" aria-hidden="true">
+              <pre class="nf-art">   .´ `.
+  /  kali \
+ |   <span class="nf-red">◇──◇</span>   |
+  \  ===  /
+   `.___.'</pre>
             </div>
-            <div class="terminal-body" id="terminal-about">
-              <div class="terminal-line" data-delay="200"><span class="terminal-prompt">$</span> whoami</div>
-              <div class="terminal-line" data-delay="500"><span class="terminal-output">→ dhakshan // cybersecurity
-                  specialist</span></div>
-              <div class="terminal-line" data-delay="800"><span class="terminal-prompt">$</span> cat /etc/education
+            <div class="nf-fields" id="nf-fields">
+              <!-- filled by JS -->
+            </div>
+          </div>
+
+          <!-- Skill meters (CPU/RAM bar style) -->
+          <div class="skill-meters" id="skill-meters">
+            <div class="sm-header">CPU — Skill Utilization</div>
+            <div class="sm-row" data-pct="90">
+              <span class="sm-label">Network Security</span>
+              <div class="sm-track">
+                <div class="sm-fill" style="--pct:90"></div>
               </div>
-              <div class="terminal-line" data-delay="1100"><span class="terminal-output">→ B.Sc. CS with Cyber Security
-                  @ SRCAS</span></div>
-              <div class="terminal-line" data-delay="1400"><span class="terminal-prompt">$</span> nmap --top-skills
+              <span class="sm-val">90%</span>
+            </div>
+            <div class="sm-row" data-pct="85">
+              <span class="sm-label">Penetration Testing</span>
+              <div class="sm-track">
+                <div class="sm-fill" style="--pct:85"></div>
               </div>
-              <div class="terminal-line" data-delay="1700"><span class="terminal-output">→ Pentesting, Networking,
-                  Linux, OSINT</span></div>
-              <div class="terminal-line" data-delay="2300"><span class="terminal-output">→ "If you can't hack it, you
-                  don't own it."</span></div>
-
-              <!-- Interactive Input -->
-
+              <span class="sm-val">85%</span>
+            </div>
+            <div class="sm-row" data-pct="92">
+              <span class="sm-label">Linux / Shell</span>
+              <div class="sm-track">
+                <div class="sm-fill" style="--pct:92"></div>
+              </div>
+              <span class="sm-val">92%</span>
+            </div>
+            <div class="sm-row" data-pct="80">
+              <span class="sm-label">Web App Security</span>
+              <div class="sm-track">
+                <div class="sm-fill" style="--pct:80"></div>
+              </div>
+              <span class="sm-val">80%</span>
+            </div>
+            <div class="sm-row" data-pct="75">
+              <span class="sm-label">Malware Analysis</span>
+              <div class="sm-track">
+                <div class="sm-fill" style="--pct:75"></div>
+              </div>
+              <span class="sm-val">75%</span>
+            </div>
+            <div class="sm-row" data-pct="88">
+              <span class="sm-label">OSINT</span>
+              <div class="sm-track">
+                <div class="sm-fill" style="--pct:88"></div>
+              </div>
+              <span class="sm-val">88%</span>
+            </div>
+            <div class="sm-row" data-pct="70">
+              <span class="sm-label">Cryptography</span>
+              <div class="sm-track">
+                <div class="sm-fill" style="--pct:70"></div>
+              </div>
+              <span class="sm-val">70%</span>
+            </div>
+            <div class="sm-header" style="margin-top:16px">MEM — Stats</div>
+            <div class="sm-stat-row"><span class="sm-key">exp</span><span class="sm-stat-val">6+ years</span></div>
+            <div class="sm-stat-row"><span class="sm-key">pentests</span><span class="sm-stat-val">50+ completed</span>
+            </div>
+            <div class="sm-stat-row"><span class="sm-key">vulns</span><span class="sm-stat-val">100+ found</span></div>
+            <div class="sm-stat-row"><span class="sm-key">mode</span><span class="sm-stat-val nf-green">OFFENSIVE</span>
             </div>
           </div>
         </div>
 
-        <!-- Stats -->
-        <div class="card fade-in">
-          <div class="card-header">
-            <div class="card-icon">⬡</div>
-            <h3>Stats</h3>
+        <!-- ps aux process table -->
+        <div class="ps-table">
+          <div class="ps-header">
+            <span>PID</span><span>USER</span><span>CPU%</span><span>MEM%</span><span>COMMAND</span><span>STATUS</span>
           </div>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <span class="stat-number" data-target="6" data-suffix="+">0</span>
-              <span class="stat-label">Years Exp</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number" data-target="50" data-suffix="+">0</span>
-              <span class="stat-label">Pentests</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number" data-target="100" data-suffix="+">0</span>
-              <span class="stat-label">Vulns Found</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number" data-target="247" data-suffix="">0</span>
-              <span class="stat-label">24/7 Learning</span>
-            </div>
+          <div class="ps-body" id="ps-body">
+            <!-- filled by JS -->
           </div>
-          <p style="margin-top: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
-            Currently focused on <span class="highlight">malware analysis</span>,
-            <span class="highlight">cloud security</span>, and
-            <span class="highlight">advanced exploitation</span>.
-          </p>
         </div>
 
-        <!-- Arsenal -->
-        <div class="card fade-in">
-          <div class="card-header">
-            <div class="card-icon">⚡</div>
-            <h3>Arsenal</h3>
-          </div>
-          <div class="arsenal-grid">
-            <span class="arsenal-tag">Kali Linux</span>
-            <span class="arsenal-tag">Burp Suite</span>
-            <span class="arsenal-tag">Metasploit</span>
-            <span class="arsenal-tag">Wireshark</span>
-            <span class="arsenal-tag">Nmap</span>
-            <span class="arsenal-tag">John the Ripper</span>
-            <span class="arsenal-tag">Hashcat</span>
-            <span class="arsenal-tag">Ghidra</span>
-            <span class="arsenal-tag">Python</span>
-            <span class="arsenal-tag">Bash</span>
-            <span class="arsenal-tag">Docker</span>
-            <span class="arsenal-tag">Git</span>
-            <span class="arsenal-tag">SQLMap</span>
-            <span class="arsenal-tag">Gobuster</span>
-            <span class="arsenal-tag">Hydra</span>
-            <span class="arsenal-tag">Aircrack-ng</span>
-          </div>
+        <!-- Bottom hint -->
+        <div class="sysmon-footer">
+          <span>F1 Help</span><span>F2 Setup</span><span>F3 Search</span><span>F5 Tree</span><span>F9
+            Kill</span><span>F10 Quit</span>
         </div>
       </div>
 
-      <div class="hacker-fact fade-in" id="hacker-fact">
+      <div class="hacker-fact fade-in" id="hacker-fact" style="margin-top:32px">
         <div class="hacker-fact-label">// Random Security Fact</div>
         <p class="hacker-fact-text" id="hacker-fact-text">Loading...</p>
         <p class="hacker-fact-hint">Click to see another</p>
@@ -212,74 +214,108 @@
     <div class="section-container">
       <div class="section-header">
         <p class="section-label">Experience</p>
-        <h2 class="section-title">Journey & Credentials</h2>
-        <p class="section-subtitle">From self-taught exploration to formal education and professional research.</p>
+        <h2 class="section-title">git log</h2>
+        <p class="section-subtitle">Commit history — from first exploit to formal education.</p>
       </div>
-
-      <div class="timeline">
-        <div class="timeline-item fade-in">
-          <div class="timeline-dot"></div>
-          <div class="timeline-date">2025 — Present</div>
-          <div class="timeline-title">B.Sc. Computer Science with Cyber Security</div>
-          <div class="timeline-subtitle">SRCAS — Sri Ramakrishna College of Arts & Science</div>
-          <div class="timeline-desc">
-            Formal education in cybersecurity fundamentals, network defense,
-            cryptography, and ethical hacking. Complementing with independent research
-            in advanced exploitation techniques and malware analysis.
-          </div>
+      <div class="git-terminal fade-in">
+        <div class="git-terminal-bar">
+          <span class="terminal-dot red"></span>
+          <span class="terminal-dot yellow"></span>
+          <span class="terminal-dot green"></span>
+          <span class="git-terminal-title">
+            <span class="rtp-user">dhakshan</span><span class="rtp-sep">@</span><span class="rtp-host">kali</span><span
+              class="rtp-sep">:</span><span class="rtp-dir">~/career</span>
+          </span>
+          <span class="git-branch">⎇ main</span>
         </div>
-        <div class="timeline-item fade-in">
-          <div class="timeline-dot"></div>
-          <div class="timeline-date">2022 — 2025</div>
-          <div class="timeline-title">Security Research & Bug Bounties</div>
-          <div class="timeline-subtitle">Independent / Bug Bounty Platforms</div>
-          <div class="timeline-desc">
-            Deep-dived into penetration testing methodologies, web application security,
-            and network exploitation. Completed 50+ vulnerability assessments and
-            contributed to multiple open-source security tools.
-          </div>
+        <div class="git-cmd-bar">
+          <span class="repo-prompt"><span class="rp-user">dhakshan</span><span class="rp-at">@</span><span
+              class="rp-host">kali</span><span class="rp-sep">:</span><span class="rp-dir">~/career</span><span
+              class="rp-dollar"> $</span></span>
+          <span class="git-cmd-text">git log --graph --oneline --all</span>
         </div>
-        <div class="timeline-item fade-in">
-          <div class="timeline-dot"></div>
-          <div class="timeline-date">2019 — 2022</div>
-          <div class="timeline-title">Early Security Exploration</div>
-          <div class="timeline-subtitle">Self-taught / CTF Platforms</div>
-          <div class="timeline-desc">
-            Began the journey into cybersecurity through CTF competitions,
-            Linux administration, and networking fundamentals. Built a home lab
-            for attack and defense scenarios.
+        <div class="git-log-body">
+          <div class="git-commit">
+            <div class="gc-row">
+              <span class="gc-graph">●</span>
+              <span class="gc-hash">a3f9c2b</span>
+              <span class="gc-tag-inline">HEAD → main</span>
+              <span class="gc-msg">B.Sc. Computer Science with Cyber Security</span>
+              <span class="gc-date">2025–present</span>
+              <span class="gc-arrow">›</span>
+            </div>
+            <div class="gc-detail">
+              <div class="gc-diff">
+                <div class="gcd-header">commit a3f9c2b &nbsp;|&nbsp; Author: Dhakshan A &nbsp;|&nbsp; 2025–present</div>
+                <div class="gcd-subject">feat: enrolled @ SRCAS — B.Sc. CS with Cyber Security</div>
+                <div class="gcd-body">
+                  <span class="gcd-add">+ Formal education in cybersecurity fundamentals, network defense</span>
+                  <span class="gcd-add">+ Cryptography, ethical hacking, advanced exploitation research</span>
+                  <span class="gcd-add">+ Independent malware analysis alongside curriculum</span>
+                  <span class="gcd-cmt"> Institute: Sri Ramakrishna College of Arts &amp; Science (SRCAS)</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div class="certs-label">Certifications & Achievements</div>
-      <div class="certs-grid">
-        <div class="cert-item fade-in">
-          <div class="cert-icon">◆</div>
-          <div class="cert-info">
-            <h4>Network Security Fundamentals</h4>
-            <p>Cisco Networking Academy</p>
+          <div class="gc-pipe">│</div>
+          <div class="git-commit">
+            <div class="gc-row">
+              <span class="gc-graph">●</span>
+              <span class="gc-hash">d7e1a89</span>
+              <span class="gc-msg">Security Research &amp; Bug Bounties</span>
+              <span class="gc-date">2022–2025</span>
+              <span class="gc-arrow">›</span>
+            </div>
+            <div class="gc-detail">
+              <div class="gc-diff">
+                <div class="gcd-header">commit d7e1a89 &nbsp;|&nbsp; Author: Dhakshan A &nbsp;|&nbsp; 2022–2025</div>
+                <div class="gcd-subject">feat: independent research + bug bounty programs</div>
+                <div class="gcd-body">
+                  <span class="gcd-add">+ 50+ vulnerability assessments completed</span>
+                  <span class="gcd-add">+ Deep-dived pentesting, web app security, network exploitation</span>
+                  <span class="gcd-add">+ Contributed to multiple open-source security tools</span>
+                  <span class="gcd-cmt"> Platforms: HackerOne, Bugcrowd, independent research</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="cert-item fade-in">
-          <div class="cert-icon">◆</div>
-          <div class="cert-info">
-            <h4>Ethical Hacking Essentials</h4>
-            <p>EC-Council</p>
+          <div class="gc-pipe">│</div>
+          <div class="git-commit">
+            <div class="gc-row">
+              <span class="gc-graph">●</span>
+              <span class="gc-hash">1b2d4f7</span>
+              <span class="gc-msg">Early Security Exploration</span>
+              <span class="gc-date">2019–2022</span>
+              <span class="gc-arrow">›</span>
+            </div>
+            <div class="gc-detail">
+              <div class="gc-diff">
+                <div class="gcd-header">commit 1b2d4f7 &nbsp;|&nbsp; Author: Dhakshan A &nbsp;|&nbsp; 2019–2022</div>
+                <div class="gcd-subject">init: first commit — CTF &amp; Linux deep dive</div>
+                <div class="gcd-body">
+                  <span class="gcd-add">+ Started with CTF competitions and Linux administration</span>
+                  <span class="gcd-add">+ Built home lab for attack/defense scenarios</span>
+                  <span class="gcd-add">+ Networking fundamentals mastered</span>
+                  <span class="gcd-cmt"> Platforms: HackTheBox, TryHackMe, PicoCTF</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="cert-item fade-in">
-          <div class="cert-icon">◆</div>
-          <div class="cert-info">
-            <h4>Linux Essentials</h4>
-            <p>Linux Professional Institute</p>
-          </div>
-        </div>
-        <div class="cert-item fade-in">
-          <div class="cert-icon">◆</div>
-          <div class="cert-info">
-            <h4>Python for Cybersecurity</h4>
-            <p>Self-directed Study</p>
+          <div class="gc-pipe">│</div>
+          <div class="gc-tags-section">
+            <div class="gc-tags-label">$ git tag --list</div>
+            <div class="gc-tag-row"><span class="gc-tag-badge">tag</span><span
+                class="gc-tag-name">v1.0-network-security-fundamentals</span><span class="gc-tag-issuer">Cisco
+                Networking Academy</span></div>
+            <div class="gc-tag-row"><span class="gc-tag-badge">tag</span><span
+                class="gc-tag-name">v2.0-ethical-hacking-essentials</span><span class="gc-tag-issuer">EC-Council</span>
+            </div>
+            <div class="gc-tag-row"><span class="gc-tag-badge">tag</span><span
+                class="gc-tag-name">v3.0-linux-essentials</span><span class="gc-tag-issuer">Linux Professional
+                Institute</span></div>
+            <div class="gc-tag-row"><span class="gc-tag-badge">tag</span><span
+                class="gc-tag-name">v4.0-python-for-cybersecurity</span><span class="gc-tag-issuer">Self-directed
+                Study</span></div>
           </div>
         </div>
       </div>
@@ -293,22 +329,65 @@
     <div class="section-container">
       <div class="section-header">
         <p class="section-label">Projects</p>
-        <h2 class="section-title">Live from GitHub</h2>
-        <p class="section-subtitle">Every repository, every commit — pulled directly from the source.</p>
+        <h2 class="section-title">Repository Explorer</h2>
+        <p class="section-subtitle">Live-fetched from GitHub. Click any row to inspect.</p>
       </div>
 
-      <div class="projects-filter" id="projects-filter" style="display: none;">
-        <button class="filter-btn active" data-filter="all">All</button>
-      </div>
+      <!-- Terminal Shell -->
+      <div class="repo-terminal fade-in">
+        <!-- Title bar -->
+        <div class="repo-terminal-bar">
+          <span class="terminal-dot red"></span>
+          <span class="terminal-dot yellow"></span>
+          <span class="terminal-dot green"></span>
+          <span class="repo-terminal-path">
+            <span class="rtp-user">dhakshan</span><span class="rtp-sep">@</span><span
+              class="rtp-host">github</span><span class="rtp-sep">:</span><span class="rtp-dir">~/repos</span>
+          </span>
+          <span class="repo-term-label">bash — 80×24</span>
+        </div>
 
-      <div class="projects-grid" id="projects-grid">
-        <div class="loading-indicator" id="projects-loading">
-          <div class="loader-spinner"></div>
-          <span>Fetching repositories...</span>
+        <!-- Command bar + search -->
+        <div class="repo-cmd-bar">
+          <span class="repo-prompt"><span class="rp-user">dhakshan</span><span class="rp-at">@</span><span
+              class="rp-host">github</span><span class="rp-sep">:</span><span class="rp-dir">~/repos</span><span
+              class="rp-dollar"> $</span></span>
+          <span class="repo-cmd-text" id="repo-cmd-text">ls -la --color=auto</span>
+          <span class="repo-cmd-cursor">▮</span>
+        </div>
+
+        <!-- Column header -->
+        <div class="repo-col-header">
+          <span class="rc-perms">permissions</span>
+          <span class="rc-lang">lang</span>
+          <span class="rc-name">name</span>
+          <span class="rc-desc">description</span>
+          <span class="rc-date">updated</span>
+          <span class="rc-link"></span>
+        </div>
+
+        <!-- Repo rows injected by JS -->
+        <div class="repo-list" id="repo-list">
+          <div class="repo-loading" id="projects-loading">
+            <span class="repo-loading-spinner"></span>
+            <span>Fetching remote repositories...</span>
+          </div>
+        </div>
+
+        <!-- Footer bar -->
+        <div class="repo-footer-bar">
+          <div class="repo-search-wrap">
+            <span class="rs-icon">⌕</span>
+            <input class="repo-search" id="repo-search" type="text" placeholder="grep --name=..." autocomplete="off"
+              spellcheck="false">
+          </div>
+          <span class="repo-stat-line" id="repo-stat-line">— repos</span>
         </div>
       </div>
+
     </div>
   </section>
+
 
   <div class="section-divider"></div>
 
@@ -317,46 +396,125 @@
     <div class="section-container">
       <div class="section-header">
         <p class="section-label">Writeups</p>
-        <h2 class="section-title">CTF & Research</h2>
-        <p class="section-subtitle">Breakdowns of challenges solved, vulnerabilities exploited, and lessons learned.</p>
+        <h2 class="section-title">Exploit DB</h2>
+        <p class="section-subtitle">Vulnerability research, CTF writeups, and bug bounty findings.</p>
       </div>
-
-      <div class="writeups-grid">
-        <div class="writeup-card fade-in">
-          <span class="writeup-tag">CTF Writeup</span>
-          <h3 class="writeup-title">Buffer Overflow — Ret2Win</h3>
-          <p class="writeup-desc">
-            Classic stack-based buffer overflow with return-to-win.
-            Bypassed ASLR using pattern offset and pwntools payload.
-          </p>
-          <div class="writeup-meta"><span>Binary Exploitation</span><span>·</span><span>Medium</span></div>
+      <div class="edb-terminal fade-in">
+        <div class="edb-bar">
+          <span class="terminal-dot red"></span>
+          <span class="terminal-dot yellow"></span>
+          <span class="terminal-dot green"></span>
+          <span class="edb-title">dhakshan@exploit-db — searchsploit</span>
+          <span class="edb-count">4 results</span>
         </div>
-        <div class="writeup-card fade-in">
-          <span class="writeup-tag">Lab Report</span>
-          <h3 class="writeup-title">AD Lateral Movement</h3>
-          <p class="writeup-desc">
-            Full attack chain from foothold to domain admin using
-            Kerberoasting, Pass-the-Hash, and BloodHound.
-          </p>
-          <div class="writeup-meta"><span>Active Directory</span><span>·</span><span>Hard</span></div>
+        <div class="edb-cmd">
+          <span class="repo-prompt"><span class="rp-user">dhakshan</span><span class="rp-at">@</span><span
+              class="rp-host">kali</span><span class="rp-sep">:</span><span class="rp-dir">~</span><span
+              class="rp-dollar"> $</span></span>
+          <span class="edb-cmd-text">searchsploit --all --author=dhakshan</span>
         </div>
-        <div class="writeup-card fade-in">
-          <span class="writeup-tag">Bug Bounty</span>
-          <h3 class="writeup-title">IDOR → Account Takeover</h3>
-          <p class="writeup-desc">
-            Discovered an IDOR vulnerability enabling unauthorized profile
-            access and settings modification on a production app.
-          </p>
-          <div class="writeup-meta"><span>Web Security</span><span>·</span><span>Critical</span></div>
+        <div class="edb-filters">
+          <button class="edb-filter active" data-sev="all">ALL</button>
+          <button class="edb-filter" data-sev="critical"><span class="sev-dot critical"></span>CRITICAL</button>
+          <button class="edb-filter" data-sev="high"><span class="sev-dot high"></span>HIGH</button>
+          <button class="edb-filter" data-sev="medium"><span class="sev-dot medium"></span>MEDIUM</button>
         </div>
-        <div class="writeup-card fade-in">
-          <span class="writeup-tag">Research</span>
-          <h3 class="writeup-title">WiFi Deauth & Evil Twin</h3>
-          <p class="writeup-desc">
-            Wireless attack vectors using Aircrack-ng. Created an evil twin
-            AP to capture WPA2 handshakes and credentials.
-          </p>
-          <div class="writeup-meta"><span>Wireless Security</span><span>·</span><span>Advanced</span></div>
+        <div class="edb-col-header">
+          <span class="ec-id">ID</span>
+          <span class="ec-sev">Severity</span>
+          <span class="ec-cat">Category</span>
+          <span class="ec-title">Title</span>
+          <span class="ec-date">Date</span>
+          <span class="ec-arr"></span>
+        </div>
+        <div class="edb-list">
+          <div class="edb-row" data-sev="critical">
+            <div class="er-main">
+              <span class="ec-id">EDB-DA-001</span>
+              <span class="ec-sev"><span class="sev-badge critical">CRITICAL</span></span>
+              <span class="ec-cat">Web Security</span>
+              <span class="ec-title">IDOR → Account Takeover</span>
+              <span class="ec-date">2024-09</span>
+              <span class="ec-arr">›</span>
+            </div>
+            <div class="er-detail">
+              <div class="erd-inner">
+                <div class="erd-meta"><span><span class="erd-key">type</span> Bug Bounty</span><span><span
+                      class="erd-key">cvss</span> 9.8</span><span><span class="erd-key">target</span> Production Web
+                    App</span></div>
+                <p class="erd-desc">Discovered an IDOR vulnerability allowing unauthorized access to any user profile.
+                  By manipulating the <code>user_id</code> parameter, an attacker could read, modify, or delete any
+                  account without authentication.</p>
+                <div class="erd-tags"><span>IDOR</span><span>Auth Bypass</span><span>API</span><span>Mass
+                    Assignment</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="edb-row" data-sev="high">
+            <div class="er-main">
+              <span class="ec-id">EDB-DA-002</span>
+              <span class="ec-sev"><span class="sev-badge high">HIGH</span></span>
+              <span class="ec-cat">Active Directory</span>
+              <span class="ec-title">AD Lateral Movement — Domain Admin</span>
+              <span class="ec-date">2024-03</span>
+              <span class="ec-arr">›</span>
+            </div>
+            <div class="er-detail">
+              <div class="erd-inner">
+                <div class="erd-meta"><span><span class="erd-key">type</span> Lab Report</span><span><span
+                      class="erd-key">cvss</span> 8.8</span><span><span class="erd-key">target</span> Internal AD</span>
+                </div>
+                <p class="erd-desc">Full attack chain to Domain Admin via Kerberoasting, Pass-the-Hash, and BloodHound
+                  path analysis from foothold to full domain compromise.</p>
+                <div class="erd-tags">
+                  <span>Kerberoasting</span><span>Pass-the-Hash</span><span>BloodHound</span><span>PrivEsc</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="edb-row" data-sev="medium">
+            <div class="er-main">
+              <span class="ec-id">EDB-DA-003</span>
+              <span class="ec-sev"><span class="sev-badge medium">MEDIUM</span></span>
+              <span class="ec-cat">Binary Exploitation</span>
+              <span class="ec-title">Buffer Overflow — Ret2Win</span>
+              <span class="ec-date">2023-11</span>
+              <span class="ec-arr">›</span>
+            </div>
+            <div class="er-detail">
+              <div class="erd-inner">
+                <div class="erd-meta"><span><span class="erd-key">type</span> CTF Writeup</span><span><span
+                      class="erd-key">cvss</span> 6.5</span><span><span class="erd-key">target</span> 32-bit ELF</span>
+                </div>
+                <p class="erd-desc">Stack-based buffer overflow using pwntools <code>cyclic()</code> to find offset,
+                  overwrote return address to redirect to <code>win()</code> for shell access. ASLR defeated via fixed
+                  offset.</p>
+                <div class="erd-tags"><span>Buffer Overflow</span><span>ret2win</span><span>pwntools</span><span>ASLR
+                    bypass</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="edb-row" data-sev="high">
+            <div class="er-main">
+              <span class="ec-id">EDB-DA-004</span>
+              <span class="ec-sev"><span class="sev-badge high">HIGH</span></span>
+              <span class="ec-cat">Wireless Security</span>
+              <span class="ec-title">WiFi Deauth &amp; Evil Twin AP</span>
+              <span class="ec-date">2023-07</span>
+              <span class="ec-arr">›</span>
+            </div>
+            <div class="er-detail">
+              <div class="erd-inner">
+                <div class="erd-meta"><span><span class="erd-key">type</span> Research</span><span><span
+                      class="erd-key">cvss</span> 7.4</span><span><span class="erd-key">target</span> WPA2
+                    Network</span></div>
+                <p class="erd-desc">Sent 802.11 deauth frames to force disconnection, stood up Evil Twin AP, captured
+                  WPA2 4-way handshakes, cracked PSK offline with Hashcat using wordlist + rules.</p>
+                <div class="erd-tags"><span>Evil
+                    Twin</span><span>Deauth</span><span>WPA2</span><span>Aircrack-ng</span><span>Hashcat</span></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -369,45 +527,128 @@
     <div class="section-container">
       <div class="section-header">
         <p class="section-label">Contact</p>
-        <h2 class="section-title">Let's Connect</h2>
+        <h2 class="section-title">Establish Connection</h2>
         <p class="section-subtitle">Open for projects, collaborations, and opportunities.</p>
       </div>
 
-      <div class="contact-grid">
-        <a href="https://github.com/dhakshan0819" target="_blank" rel="noopener noreferrer" class="social-card fade-in">
-          <svg class="social-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-          </svg>
-          <h3>GitHub</h3>
-          <p>@dhakshan0819</p>
-          <span class="social-arrow">→</span>
-        </a>
-        <a href="https://www.linkedin.com/in/dhakshan0819" target="_blank" rel="noopener noreferrer"
-          class="social-card fade-in">
-          <svg class="social-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-          </svg>
-          <h3>LinkedIn</h3>
-          <p>Dhakshan A</p>
-          <span class="social-arrow">→</span>
-        </a>
-        <a href="mailto:dhakshan0819@gmail.com" class="social-card fade-in">
-          <svg class="social-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
-          </svg>
-          <h3>Email</h3>
-          <p>dhakshan0819@gmail.com</p>
-          <span class="social-arrow">→</span>
-        </a>
+      <!-- Network topology canvas -->
+      <div class="net-console fade-in">
+        <!-- Canvas background: animated node graph -->
+        <canvas class="net-canvas" id="net-canvas"></canvas>
+
+        <!-- Left: SSH terminal -->
+        <div class="net-ssh">
+          <div class="net-ssh-bar">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="net-ssh-title">ssh-client v2.0 — network map</span>
+            <span class="net-live"><span class="net-live-dot"></span>LIVE</span>
+          </div>
+
+          <div class="net-ssh-body">
+            <div class="net-ssh-line">
+              <span class="nsl-prompt">$</span>
+              <span class="nsl-cmd">ssh-keyscan dhakshan0819 --verbose</span>
+            </div>
+            <div class="net-ssh-line nsl-out">
+              <span>Scanning known_hosts for dhakshan0819...</span>
+            </div>
+            <div class="net-ssh-line nsl-ok">
+              <span>✓ Host dhakshan0819 is reachable (3 endpoints found)</span>
+            </div>
+            <div class="net-ssh-line nsl-out" style="margin-top:8px">
+              <span>RSA fingerprint: <span style="color:#f59e0b">SHA256:dh4k5h4n+0ff3ns1v3s3cur1ty</span></span>
+            </div>
+            <div class="net-ssh-line nsl-out">
+              <span>Encryption: AES-256-GCM · ECDH key exchange · Perfect Forward Secrecy</span>
+            </div>
+
+            <div class="net-divider">─── available endpoints ─────────────────</div>
+
+            <!-- SSH connect cards -->
+            <a href="mailto:dhakshan0819@gmail.com" class="ssh-card" id="ssh-email">
+              <div class="ssh-card-proto">
+                <span class="ssh-badge">SMTP</span>
+                <span class="ssh-status-dot"></span>
+              </div>
+              <div class="ssh-card-body">
+                <div class="ssh-host">dhakshan0819@gmail.com</div>
+                <div class="ssh-sub">dhakshan0819@gmail.com</div>
+              </div>
+              <div class="ssh-card-meta">
+                <span class="ssh-latency" id="lat-email">12ms</span>
+                <span class="ssh-arrow">→</span>
+              </div>
+            </a>
+
+            <a href="https://www.linkedin.com/in/dhakshan0819/" target="_blank" rel="noopener" class="ssh-card"
+              id="ssh-linkedin">
+              <div class="ssh-card-proto">
+                <span class="ssh-badge badge-blue">HTTPS</span>
+                <span class="ssh-status-dot"></span>
+              </div>
+              <div class="ssh-card-body">
+                <div class="ssh-host">linkedin.com/in/dhakshan0819</div>
+                <div class="ssh-sub">Professional network · Open to DMs</div>
+              </div>
+              <div class="ssh-card-meta">
+                <span class="ssh-latency" id="lat-linkedin">8ms</span>
+                <span class="ssh-arrow">→</span>
+              </div>
+            </a>
+
+            <a href="https://github.com/dhakshan0819" target="_blank" rel="noopener" class="ssh-card" id="ssh-github">
+              <div class="ssh-card-proto">
+                <span class="ssh-badge badge-purple">GIT</span>
+                <span class="ssh-status-dot"></span>
+              </div>
+              <div class="ssh-card-body">
+                <div class="ssh-host">github.com/dhakshan0819</div>
+                <div class="ssh-sub">Source code · Projects · Contributions</div>
+              </div>
+              <div class="ssh-card-meta">
+                <span class="ssh-latency" id="lat-github">5ms</span>
+                <span class="ssh-arrow">→</span>
+              </div>
+            </a>
+
+            <div class="net-divider" style="margin-top:16px">─── status ──────────────────────────────</div>
+            <div class="net-ssh-line nsl-out" id="net-status-line">
+              <span>3/3 endpoints online · 0% packet loss · avg 8ms</span>
+            </div>
+            <div class="net-ssh-line" style="margin-top:8px">
+              <span class="nsl-prompt">$</span>
+              <span class="nsl-cursor">▮</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: live node map legend -->
+        <div class="net-legend">
+          <div class="net-legend-title">// Network Topology</div>
+          <div class="net-node-list">
+            <div class="nnl-row"><span class="nnl-dot cyan"></span><span class="nnl-label">dhakshan0819</span><span
+                class="nnl-status">ORIGIN</span></div>
+            <div class="nnl-row"><span class="nnl-dot green"></span><span class="nnl-label">gmail.com</span><span
+                class="nnl-status">ONLINE</span></div>
+            <div class="nnl-row"><span class="nnl-dot blue"></span><span class="nnl-label">linkedin.com</span><span
+                class="nnl-status">ONLINE</span></div>
+            <div class="nnl-row"><span class="nnl-dot purple"></span><span class="nnl-label">github.com</span><span
+                class="nnl-status">ONLINE</span></div>
+          </div>
+          <div class="net-legend-stats">
+            <div class="nls-row"><span>packets/s</span><span class="nls-val" id="nls-pps">847</span></div>
+            <div class="nls-row"><span>uptime</span><span class="nls-val">99.9%</span></div>
+            <div class="nls-row"><span>encryption</span><span class="nls-val" style="color:#10b981">AES-256</span></div>
+            <div class="nls-row"><span>mode</span><span class="nls-val" style="color:#3b82f6">ACTIVE</span></div>
+          </div>
+        </div>
       </div>
 
-      <div class="contact-extras">
-      </div>
     </div>
   </section>
+
 
   <!-- ==================== FOOTER ==================== -->
   <footer>

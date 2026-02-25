@@ -22,6 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initRandomGlitch();
     initConsoleEasterEgg();
     initTextScramble();
+    initContactSection();
+    initSysmon();
+    initGitLog();
+    initExploitDB();
+    initNetConsole();
+
 
     // Init Hex Graph
     setTimeout(() => {
@@ -379,27 +385,71 @@ function initNeuralBackground() {
 }
 
 /* ==========================
-   TYPING ANIMATION
+   HACK REVEAL NAME ANIMATION
    ========================== */
 function initTypingAnimation() {
   const el = document.getElementById('hero-name');
   if (!el) return;
 
   const fullText = 'Dhakshan A';
-  el.textContent = '';
+  const GLITCH_CHARS = 'アイウエオカキクケコ#@$%&█▓▒░01<>/\\!?*^~';
+  const SCRAMBLE_FRAMES = 9;    // how many frames each char scrambles
+  const CHAR_DELAY = 95;        // ms between starting each character
+  const SCRAMBLE_SPEED = 38;    // ms per scramble frame
 
-  let i = 0;
-  const speed = 120;
+  // Build spans for each character
+  el.innerHTML = '';
+  const spans = [];
 
-  function type() {
-    if (i < fullText.length) {
-      el.textContent += fullText.charAt(i);
-      i++;
-      setTimeout(type, speed);
+  for (const ch of fullText) {
+    const span = document.createElement('span');
+    if (ch === ' ') {
+      span.className = 'name-char space';
+      span.textContent = ' ';
+    } else {
+      span.className = 'name-char';
+      span.textContent = ch;
     }
+    el.appendChild(span);
+    spans.push({ span, char: ch });
   }
 
-  setTimeout(type, 600);
+  // Add blinking cursor
+  const cursor = document.createElement('span');
+  cursor.className = 'name-cursor';
+  el.appendChild(cursor);
+
+  // Animate each char with a staggered scramble reveal
+  spans.forEach(({ span, char }, index) => {
+    if (char === ' ') {
+      setTimeout(() => span.classList.add('revealed'), index * CHAR_DELAY + 600);
+      return;
+    }
+
+    setTimeout(() => {
+      let frame = 0;
+
+      // Scramble phase
+      const scrambler = setInterval(() => {
+        if (frame >= SCRAMBLE_FRAMES) {
+          clearInterval(scrambler);
+          // Lock to real character with glow
+          span.textContent = char;
+          span.classList.remove('scrambling');
+          span.classList.add('locked');
+          // Show cursor after last char
+          if (index === spans.length - 1) {
+            setTimeout(() => cursor.classList.add('visible'), 120);
+          }
+          return;
+        }
+        span.textContent = GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+        span.classList.add('scrambling');
+        frame++;
+      }, SCRAMBLE_SPEED);
+
+    }, 600 + index * CHAR_DELAY);
+  });
 }
 
 /* ==========================
@@ -487,117 +537,170 @@ function initMobileNav() {
 }
 
 /* ==========================
-   FETCH GITHUB PROJECTS
+   TERMINAL REPO EXPLORER
    ========================== */
+const LANG_COLORS = {
+  python: '#3572A5', javascript: '#f1e05a', typescript: '#2b7489',
+  html: '#e34c26', css: '#563d7c', shell: '#89e051',
+  go: '#00ADD8', rust: '#dea584', java: '#b07219',
+  c: '#555555', 'c++': '#f34b7d', 'c#': '#178600',
+  ruby: '#701516', php: '#4F5D95', swift: '#ffac45',
+  kotlin: '#F18E33', dart: '#00B4AB', r: '#198CE7',
+  lua: '#000080', vim: '#199f4b', dockerfile: '#384d54',
+  default: '#6e7681'
+};
+
+const UNIX_PERMS = [
+  '-rw-r--r--', '-rwxr-xr-x', '-rw-rw-r--',
+  '-rw-------', '-rwxrwxr-x', '-r--r--r--'
+];
+
 async function fetchGitHubProjects() {
-  const container = document.getElementById('projects-grid');
+  const list = document.getElementById('repo-list');
   const loading = document.getElementById('projects-loading');
-  if (!container) return;
+  const statEl = document.getElementById('repo-stat-line');
+  const cmdText = document.getElementById('repo-cmd-text');
+  const search = document.getElementById('repo-search');
+  if (!list) return;
+
+  // Typewriter for command text
+  if (cmdText) {
+    const target = 'ls -la --color=auto';
+    cmdText.textContent = '';
+    let i = 0;
+    const tw = setInterval(() => {
+      cmdText.textContent += target[i++];
+      if (i >= target.length) clearInterval(tw);
+    }, 55);
+  }
 
   try {
-    const response = await fetch('https://api.github.com/users/dhakshan0819/repos?sort=updated&per_page=100');
-
-    if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
-
-    let repos = await response.json();
-
-    repos = repos
-      .filter(r => !r.fork)
-      .sort((a, b) => b.stargazers_count - a.stargazers_count || new Date(b.updated_at) - new Date(a.updated_at));
+    const res = await fetch('https://api.github.com/users/dhakshan0819/repos?sort=updated&per_page=100');
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    let repos = (await res.json()).filter(r => !r.fork)
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
     if (loading) loading.remove();
-
     if (repos.length === 0) {
-      container.innerHTML = `
-        <div class="projects-error">
-          <p>No public repositories found.</p>
-        </div>`;
+      list.innerHTML = '<div style="padding:32px;color:var(--text-tertiary);text-align:center;">No public repositories found.</div>';
       return;
     }
 
-    repos.forEach((repo, index) => {
-      const card = document.createElement('a');
-      card.href = repo.html_url;
-      card.target = '_blank';
-      card.rel = 'noopener noreferrer';
-      card.className = 'project-card fade-in';
-      card.style.animationDelay = `${index * 0.08}s`;
-      if (repo.language) card.dataset.lang = repo.language.toLowerCase();
+    if (statEl) statEl.textContent = `${repos.length} repositories`;
 
-      const description = repo.description
-        ? escapeHTML(repo.description)
-        : '<em style="color: var(--text-tertiary);">No description provided.</em>';
+    // Build rows
+    repos.forEach((repo, idx) => {
+      const lang = (repo.language || '').toLowerCase();
+      const color = LANG_COLORS[lang] || LANG_COLORS.default;
+      const perms = UNIX_PERMS[idx % UNIX_PERMS.length];
+      const updated = new Date(repo.updated_at)
+        .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+      const desc = repo.description || 'No description.';
+      const langTag = repo.language || '—';
 
-      const languageBadge = repo.language
-        ? `<span class="project-badge lang-dot">${escapeHTML(repo.language)}</span>`
-        : '';
+      // Row
+      const row = document.createElement('div');
+      row.className = 'repo-row';
+      row.dataset.name = repo.name.toLowerCase();
+      row.dataset.lang = lang;
+      row.style.setProperty('--d', `${idx * 40}ms`);
 
-      const starsBadge = repo.stargazers_count > 0
-        ? `<span class="project-badge stars">★ ${repo.stargazers_count}</span>`
-        : '';
+      row.innerHTML = `
+        <span class="rr-perms">${perms}</span>
+        <span class="rr-lang">
+          <span class="rr-lang-dot" style="background:${color}"></span>
+          <span class="rr-lang-name" style="color:${color}">${escapeHTML(langTag)}</span>
+        </span>
+        <span class="rr-name">${escapeHTML(repo.name)}</span>
+        <span class="rr-desc">${escapeHTML(desc.length > 60 ? desc.slice(0, 60) + '…' : desc)}</span>
+        <span class="rr-date">${updated}</span>
+        <span class="rr-arrow">›</span>
+      `;
 
-      const forkBadge = repo.forks_count > 0
-        ? `<span class="project-badge">⑂ ${repo.forks_count}</span>`
-        : '';
-
-      card.innerHTML = `
-        <span class="project-link-icon">↗</span>
-        <h3 class="project-name">
-          <span class="project-name-icon">◆</span>
-          ${escapeHTML(repo.name)}
-        </h3>
-        <p class="project-desc">${description}</p>
-        <div class="project-meta">
-          ${languageBadge}
-          ${starsBadge}
-          ${forkBadge}
+      // Expandable detail panel
+      const detail = document.createElement('div');
+      detail.className = 'repo-detail';
+      detail.innerHTML = `
+        <div class="rd-inner">
+          <div class="rd-cmd"><span class="rd-prompt">$</span> cat ${escapeHTML(repo.name)}/README.md</div>
+          <div class="rd-body">
+            <div class="rd-field"><span class="rd-key">name</span><span class="rd-val rr-name-accent">${escapeHTML(repo.name)}</span></div>
+            <div class="rd-field"><span class="rd-key">language</span><span class="rd-val" style="color:${color}">${escapeHTML(langTag)}</span></div>
+            <div class="rd-field"><span class="rd-key">description</span><span class="rd-val">${escapeHTML(repo.description || 'No description provided.')}</span></div>
+            <div class="rd-field"><span class="rd-key">updated</span><span class="rd-val">${new Date(repo.updated_at).toLocaleDateString('en-US', { dateStyle: 'long' })}</span></div>
+            <div class="rd-field"><span class="rd-key">url</span><a class="rd-link" href="${repo.html_url}" target="_blank" rel="noopener">${repo.html_url}</a></div>
+            ${repo.homepage ? `<div class="rd-field"><span class="rd-key">demo</span><a class="rd-link" href="${escapeHTML(repo.homepage)}" target="_blank" rel="noopener">${escapeHTML(repo.homepage)}</a></div>` : ''}
+          </div>
+          <a class="rd-open-btn" href="${repo.html_url}" target="_blank" rel="noopener noreferrer">
+            Open on GitHub <span>↗</span>
+          </a>
         </div>
       `;
 
-      container.appendChild(card);
+      // Toggle expand
+      row.addEventListener('click', () => {
+        const isOpen = row.classList.contains('expanded');
+        // Close all others
+        list.querySelectorAll('.repo-row.expanded').forEach(r => {
+          r.classList.remove('expanded');
+          r.classList.add('collapsing');
+          const d = r.nextElementSibling;
+          if (d?.classList.contains('repo-detail')) {
+            d.style.maxHeight = '0';
+            setTimeout(() => r.classList.remove('collapsing'), 300);
+          }
+        });
+        list.querySelectorAll('.repo-detail').forEach(d => { d.style.maxHeight = '0'; });
+
+        if (!isOpen) {
+          row.classList.add('expanded');
+          detail.style.maxHeight = detail.scrollHeight + 'px';
+          // After layout, scroll row into view softly
+          setTimeout(() => row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+        }
+      });
+
+      list.appendChild(row);
+      list.appendChild(detail);
     });
 
-    // Filter buttons
-    const langCounts = {};
-    repos.forEach(r => { if (r.language) langCounts[r.language] = (langCounts[r.language] || 0) + 1; });
-    const filterContainer = document.getElementById('projects-filter');
-    if (filterContainer && Object.keys(langCounts).length > 1) {
-      const langs = Object.keys(langCounts).sort();
-      langs.forEach(lang => {
-        const btn = document.createElement('button');
-        btn.className = 'filter-btn';
-        btn.dataset.filter = lang.toLowerCase();
-        btn.textContent = lang;
-        filterContainer.appendChild(btn);
-      });
-      filterContainer.style.display = 'flex';
-
-      filterContainer.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('filter-btn')) return;
-        filterContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        const filter = e.target.dataset.filter;
-        document.querySelectorAll('.project-card').forEach(card => {
-          card.style.display = (filter === 'all' || card.dataset.lang === filter) ? '' : 'none';
+    // Live search
+    if (search) {
+      search.addEventListener('input', () => {
+        const q = search.value.toLowerCase().trim();
+        let visible = 0;
+        list.querySelectorAll('.repo-row').forEach((row, i) => {
+          const name = row.dataset.name || '';
+          const show = !q || name.includes(q);
+          row.style.display = show ? '' : 'none';
+          const det = row.nextElementSibling;
+          if (det?.classList.contains('repo-detail')) {
+            det.style.display = show ? '' : 'none';
+            if (!show) { det.style.maxHeight = '0'; row.classList.remove('expanded'); }
+          }
+          if (show) visible++;
         });
+        if (statEl) statEl.textContent = `${visible} of ${repos.length} repos`;
+        // Update command text to show grep
+        if (cmdText) cmdText.textContent = q ? `grep --name="${q}" ./repos` : 'ls -la --color=auto';
       });
     }
 
-    initFadeInObserver();
-
-  } catch (error) {
-    console.error('Failed to fetch GitHub repos:', error);
+  } catch (err) {
+    console.error('Failed to fetch repos:', err);
     if (loading) loading.remove();
-    container.innerHTML = `
-      <div class="projects-error">
-        <h3>Failed to load projects</h3>
-        <p>Could not reach GitHub API. Please check your connection.</p>
-        <a href="https://github.com/dhakshan0819" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="margin-top: 16px;">
-          View on GitHub <span class="btn-arrow">→</span>
+    list.innerHTML = `
+      <div style="padding:40px;text-align:center;color:var(--danger)">
+        <div style="font-family:var(--font-mono);font-size:0.85rem;margin-bottom:12px;">
+          Error: failed to connect to GitHub API
+        </div>
+        <a href="https://github.com/dhakshan0819" target="_blank" class="btn btn-outline" style="font-size:0.75rem;">
+          View on GitHub ↗
         </a>
       </div>`;
   }
 }
+
 
 /* ==========================
    UTILITY: Escape HTML
@@ -944,6 +1047,9 @@ class TextScramble {
 function initTextScramble() {
   const headers = document.querySelectorAll('.section-title, .hero-name, .glitch-hover');
   headers.forEach(el => {
+    // Skip the hero name — it has its own per-letter animation
+    if (el.id === 'hero-name') return;
+
     const fx = new TextScramble(el);
     let isHovering = false;
 
@@ -1310,3 +1416,249 @@ class HexSkillGraph {
     });
   }
 }
+
+/* ==========================
+   CONTACT SECTION — WAVEFORM & PING
+   ========================== */
+function initContactSection() {
+  // ── Waveform bars ──────────────────────────────
+  const barsContainer = document.getElementById('rwf-bars');
+  if (barsContainer) {
+    const count = 60;
+    for (let i = 0; i < count; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'rwf-bar';
+      // Random speed and initial scale-Y so bars feel organic
+      const spd = (0.6 + Math.random() * 1.4).toFixed(2);
+      const dly = (Math.random() * 1.2).toFixed(2);
+      bar.style.setProperty('--spd', `${spd}s`);
+      bar.style.animationDelay = `${dly}s`;
+      // Vary height potential naturally
+      bar.style.maxHeight = `${Math.round(40 + Math.random() * 12)}px`;
+      // Subtle colour accent for every ~5th bar
+      if (i % 7 === 0) bar.style.background = 'linear-gradient(to top, #8b5cf6, #06b6d4)';
+      barsContainer.appendChild(bar);
+    }
+  }
+
+  // ── Ping terminal: replay animation on scroll-in ──
+  const pingTerminal = document.querySelector('.ping-terminal');
+  if (pingTerminal) {
+    const lines = pingTerminal.querySelectorAll('.ping-line');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // Restart animations by toggling the class
+          lines.forEach(line => {
+            line.style.animation = 'none';
+            line.offsetHeight; // force reflow
+            line.style.animation = '';
+          });
+        }
+      });
+    }, { threshold: 0.4 });
+
+    observer.observe(pingTerminal);
+  }
+}
+
+/* ==========================
+   ABOUT — SYSMON (htop)
+   ========================== */
+function initSysmon() {
+  // ── Neofetch fields typewriter ──────────────────────
+  const nfFields = document.getElementById('nf-fields');
+  if (nfFields) {
+    const fields = [
+      ['OS', 'Kali Linux x86_64'],
+      ['Kernel', '6.1.0-kali9-amd64'],
+      ['Uptime', '6 years'],
+      ['Shell', 'zsh + fish'],
+      ['Terminal', 'kitty'],
+      ['CPU', 'Offensive Security Cores'],
+      ['Memory', '100+ Vulns / 50+ Pentests'],
+      ['Focus', 'Malware · Cloud · Exploitation'],
+      ['Mode', '⚡ OFFENSIVE'],
+    ];
+    let idx = 0;
+    const sep = document.createElement('span');
+    sep.className = 'nf-sep';
+    sep.textContent = '─────────────────────────────';
+    nfFields.appendChild(sep);
+
+    const reveal = () => {
+      if (idx >= fields.length) return;
+      const [key, val] = fields[idx++];
+      const row = document.createElement('div');
+      row.className = 'nf-field';
+      row.innerHTML = `<span class="nf-key">${key}</span><span class="nf-val">${val}</span>`;
+      nfFields.appendChild(row);
+      setTimeout(reveal, 120);
+    };
+
+    // Trigger on scroll into view
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          nfFields.innerHTML = '';
+          nfFields.appendChild(sep.cloneNode(true));
+          idx = 0;
+          reveal();
+          obs.disconnect();
+        }
+      });
+    }, { threshold: 0.3 });
+    obs.observe(nfFields);
+  }
+
+  // ── Skill meter bars animate on scroll ──────────────
+  const smFills = document.querySelectorAll('.sm-fill');
+  if (smFills.length) {
+    const obs2 = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          smFills.forEach((fill, i) => {
+            const pct = fill.style.getPropertyValue('--pct') || '0';
+            fill.style.width = '0%';
+            setTimeout(() => { fill.style.width = pct + '%'; }, i * 80);
+          });
+          obs2.disconnect();
+        }
+      });
+    }, { threshold: 0.2 });
+    const sm = document.getElementById('skill-meters');
+    if (sm) obs2.observe(sm);
+  }
+
+  // ── ps aux: populate process table ──────────────────
+  const psBody = document.getElementById('ps-body');
+  if (psBody) {
+    const processes = [
+      { pid: '1337', cpu: '12.4', mem: '8.1', cmd: 'kali-linux', status: 'running' },
+      { pid: '1338', cpu: '9.8', mem: '5.2', cmd: 'burpsuite', status: 'running' },
+      { pid: '1339', cpu: '7.3', mem: '4.0', cmd: 'metasploit', status: 'running' },
+      { pid: '1340', cpu: '6.1', mem: '3.8', cmd: 'wireshark', status: 'running' },
+      { pid: '1341', cpu: '5.0', mem: '2.9', cmd: 'nmap', status: 'running' },
+      { pid: '1342', cpu: '4.2', mem: '2.1', cmd: 'ghidra', status: 'sleep' },
+      { pid: '1343', cpu: '3.9', mem: '1.8', cmd: 'python3', status: 'running' },
+      { pid: '1344', cpu: '3.1', mem: '1.5', cmd: 'docker', status: 'running' },
+      { pid: '1345', cpu: '2.8', mem: '1.2', cmd: 'hashcat', status: 'sleep' },
+      { pid: '1346', cpu: '2.2', mem: '0.9', cmd: 'aircrack-ng', status: 'sleep' },
+      { pid: '1347', cpu: '1.8', mem: '0.7', cmd: 'gobuster', status: 'sleep' },
+      { pid: '1348', cpu: '1.2', mem: '0.5', cmd: 'sqlmap', status: 'sleep' },
+    ];
+    processes.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'ps-row';
+      row.style.setProperty('--d', `${i * 60}ms`);
+      const statusClass = p.status === 'running' ? 'ps-status-running' : 'ps-status-sleep';
+      row.innerHTML = `
+        <span class="ps-pid">${p.pid}</span>
+        <span class="ps-user">dhakshan</span>
+        <span class="ps-cpu">${p.cpu}</span>
+        <span class="ps-mem">${p.mem}</span>
+        <span class="ps-cmd">${p.cmd}</span>
+        <span class="${statusClass}">${p.status.toUpperCase()}</span>
+      `;
+      psBody.appendChild(row);
+    });
+  }
+}
+
+/* ==========================
+   EXPERIENCE — GIT LOG
+   ========================== */
+function initGitLog() {
+  document.querySelectorAll('.git-commit').forEach(commit => {
+    const row = commit.querySelector('.gc-row');
+    const detail = commit.querySelector('.gc-detail');
+    if (!row || !detail) return;
+
+    row.addEventListener('click', () => {
+      const isOpen = commit.classList.contains('expanded');
+      // Collapse all
+      document.querySelectorAll('.git-commit.expanded').forEach(c => {
+        c.classList.remove('expanded');
+        const d = c.querySelector('.gc-detail');
+        if (d) d.style.maxHeight = '0';
+      });
+      if (!isOpen) {
+        commit.classList.add('expanded');
+        detail.style.maxHeight = detail.scrollHeight + 'px';
+        setTimeout(() => row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+      }
+    });
+  });
+
+  // Staggered row reveal
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        document.querySelectorAll('.git-commit').forEach((c, i) => {
+          c.style.opacity = '0';
+          c.style.transform = 'translateX(-10px)';
+          c.style.transition = `opacity 0.3s ${i * 100}ms, transform 0.3s ${i * 100}ms`;
+          setTimeout(() => {
+            c.style.opacity = '1';
+            c.style.transform = 'translateX(0)';
+          }, i * 100 + 50);
+        });
+        obs.disconnect();
+      }
+    });
+  }, { threshold: 0.15 });
+  const gt = document.querySelector('.git-terminal');
+  if (gt) obs.observe(gt);
+}
+
+/* ==========================
+   WRITEUPS — EXPLOIT-DB
+   ========================== */
+function initExploitDB() {
+  // Expand/collapse rows
+  document.querySelectorAll('.edb-row').forEach(row => {
+    const main = row.querySelector('.er-main');
+    const detail = row.querySelector('.er-detail');
+    if (!main || !detail) return;
+
+    main.addEventListener('click', () => {
+      const isOpen = row.classList.contains('expanded');
+      document.querySelectorAll('.edb-row.expanded').forEach(r => {
+        r.classList.remove('expanded');
+        const d = r.querySelector('.er-detail');
+        if (d) d.style.maxHeight = '0';
+      });
+      if (!isOpen) {
+        row.classList.add('expanded');
+        detail.style.maxHeight = detail.scrollHeight + 'px';
+        setTimeout(() => main.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+      }
+    });
+  });
+
+  // Severity filter
+  document.querySelectorAll('.edb-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.edb-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const sev = btn.dataset.sev;
+      document.querySelectorAll('.edb-row').forEach(row => {
+        const show = sev === 'all' || row.dataset.sev === sev;
+        row.style.display = show ? '' : 'none';
+        if (!show) {
+          row.classList.remove('expanded');
+          const d = row.querySelector('.er-detail');
+          if (d) d.style.maxHeight = '0';
+        }
+      });
+      // Update count
+      const count = document.querySelector('.edb-count');
+      if (count) {
+        const visible = [...document.querySelectorAll('.edb-row')].filter(r => r.style.display !== 'none').length;
+        count.textContent = `${visible} result${visible !== 1 ? 's' : ''}`;
+      }
+    });
+  });
+}
+
