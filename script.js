@@ -72,7 +72,7 @@ class TerminalSystem {
 
   processCommand(cmd) {
     // Clear but keep initial content or just clear all? Let's just clear user added lines for now or refresh
-    // Actually simpler to just remove all previous lines and show prompt. 
+    // Actually simpler to just remove all previous lines and show prompt.
     // But preserving the "story" is nice. Let's implementing a soft clear.
     const userLines = this.outputContainer.querySelectorAll('.user-line');
     userLines.forEach(l => l.remove());
