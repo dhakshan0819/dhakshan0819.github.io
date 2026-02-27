@@ -26,7 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initSysmon();
     initGitLog();
     initExploitDB();
-    initNetConsole();
+    // New Easter Eggs
+    initSecretWords();
+    initTripleClickBurst();
+    initIdleEasterEgg();
+    initLogoClickEgg();
 
 
     // Init Hex Graph
@@ -1213,6 +1217,7 @@ function initConsoleEasterEgg() {
 
   console.log(art, 'color: #3b82f6; font-family: monospace; font-size: 12px;');
   console.log('%c👋 Looking for vulnerabilities? Smart. I like you.', 'color: #06b6d4; font-size: 14px; font-weight: bold;');
+  console.log('%c🥚 Hidden easter eggs: ↑↑↓↓←→←→BA · type "hack" · type "sudo" · type "coffee" · type "nmap" · type "pwned" · triple-click anywhere · click the logo 5×', 'color: #8b5cf6; font-size: 11px;');
 }
 
 /* ==========================
@@ -1660,5 +1665,868 @@ function initExploitDB() {
       }
     });
   });
+}
+
+/* ============================================================
+   EASTER EGG: SECRET KEYWORD TRIGGERS
+   Type "hack", "sudo", "coffee", "nmap", "pwned" anywhere
+   ============================================================ */
+function initSecretWords() {
+  const triggers = {
+    hack: eggHack,
+    sudo: eggSudo,
+    coffee: eggCoffee,
+    nmap: eggNmap,
+    pwned: eggPwned,
+  };
+
+  let buffer = '';
+  const maxLen = Math.max(...Object.keys(triggers).map(k => k.length)) + 1;
+
+  window.addEventListener('keydown', (e) => {
+    // Skip if typing in an actual input or textarea
+    const tag = document.activeElement?.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || document.activeElement?.isContentEditable) return;
+
+    // Only process single printable characters — ignore specials (Shift, ArrowKeys, etc.)
+    if (e.key.length !== 1) return;
+
+    // Skip ctrl/meta combos (copy, paste, etc.)
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    buffer = (buffer + e.key.toLowerCase()).slice(-maxLen);
+
+    for (const [word, fn] of Object.entries(triggers)) {
+      if (buffer.endsWith(word)) {
+        buffer = '';
+        fn();
+        return;
+      }
+    }
+  }, true); // useCapture=true so it fires before any child handlers
+}
+
+/* ----------------------------------------------------------
+   HACK — Extended chromatic glitch + scanlines + screen tear
+   ---------------------------------------------------------- */
+function eggHack() {
+  // Inject CSS once
+  if (!document.getElementById('egg-hack-style')) {
+    const s = document.createElement('style');
+    s.id = 'egg-hack-style';
+    s.textContent = `
+      @keyframes hackShake {
+        0%,100%{transform:translate(0,0)}
+        10%{transform:translate(-6px,3px) skewX(-2deg)}
+        20%{transform:translate(8px,-4px) skewX(3deg)}
+        30%{transform:translate(-4px,7px)}
+        40%{transform:translate(9px,-2px) skewX(-1deg)}
+        50%{transform:translate(-7px,5px) skewX(4deg)}
+        60%{transform:translate(5px,-6px)}
+        70%{transform:translate(-9px,2px) skewX(-3deg)}
+        80%{transform:translate(4px,8px) skewX(2deg)}
+        90%{transform:translate(-3px,-5px)}
+      }
+      @keyframes hackScan {
+        0%{top:-100%} 100%{top:200%}
+      }
+      @keyframes hackFlicker {
+        0%,100%{opacity:1}20%{opacity:.6}40%{opacity:.85}60%{opacity:.4}80%{opacity:.9}
+      }
+      .hack-overlay {
+        position:fixed;inset:0;pointer-events:none;z-index:99998;overflow:hidden;
+      }
+      .hack-scanline {
+        position:absolute;left:0;width:100%;height:3px;
+        background:rgba(59,130,246,0.35);
+        animation:hackScan 0.6s linear infinite;
+        box-shadow:0 0 10px rgba(59,130,246,0.8);
+        filter:blur(1px);
+      }
+      .hack-rgb-r {
+        position:absolute;inset:0;
+        background:rgba(239,68,68,0.06);
+        transform:translateX(-4px);
+        mix-blend-mode:screen;
+      }
+      .hack-rgb-b {
+        position:absolute;inset:0;
+        background:rgba(59,130,246,0.06);
+        transform:translateX(4px);
+        mix-blend-mode:screen;
+      }
+      .hack-noise {
+        position:absolute;inset:0;
+        background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+        opacity:0.12;
+        animation:hackFlicker 0.1s linear infinite;
+      }
+      .hack-active { animation:hackShake 0.12s linear infinite; }
+      .hack-tear {
+        position:absolute;left:0;width:100%;pointer-events:none;
+        background:rgba(6,6,10,0.9);
+        box-shadow:0 0 0 1px #3b82f6;
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'hack-overlay';
+  overlay.innerHTML = `<div class="hack-rgb-r"></div><div class="hack-rgb-b"></div>
+    <div class="hack-scanline"></div><div class="hack-noise"></div>`;
+  document.body.appendChild(overlay);
+  document.body.classList.add('hack-active');
+
+  // Random screen tears
+  const tearCount = 8;
+  const tears = [];
+  for (let i = 0; i < tearCount; i++) {
+    const tear = document.createElement('div');
+    tear.className = 'hack-tear';
+    const topPct = 10 + Math.random() * 80;
+    const h = 2 + Math.random() * 18;
+    Object.assign(tear.style, { top: topPct + '%', height: h + 'px' });
+    overlay.appendChild(tear);
+    tears.push(tear);
+  }
+
+  // Animate tears
+  const tearInterval = setInterval(() => {
+    tears.forEach(t => {
+      t.style.top = (5 + Math.random() * 90) + '%';
+      t.style.height = (1 + Math.random() * 22) + 'px';
+      t.style.opacity = Math.random() > 0.4 ? '1' : '0';
+      t.style.transform = `translateX(${(Math.random() - 0.5) * 30}px)`;
+    });
+  }, 80);
+
+  // Flicker body filter
+  const filters = [
+    'hue-rotate(180deg) saturate(3)',
+    'invert(0.08) hue-rotate(240deg)',
+    'saturate(5) brightness(1.3)',
+    'hue-rotate(90deg)',
+    '',
+    'contrast(2) brightness(0.8)',
+    '',
+    'invert(0.12)',
+    '',
+  ];
+  let fi = 0;
+  const filterInterval = setInterval(() => {
+    document.body.style.filter = filters[fi++ % filters.length];
+  }, 90);
+
+  // Glitch text floaters
+  const glitchChars = '██▓▒░01アカ#@$//\\\\><{}';
+  for (let i = 0; i < 18; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      const chars = Array.from({ length: 4 + Math.floor(Math.random() * 8) },
+        () => glitchChars[Math.floor(Math.random() * glitchChars.length)]).join('');
+      Object.assign(el.style, {
+        position: 'fixed',
+        left: Math.random() * 95 + '%',
+        top: Math.random() * 90 + '%',
+        fontFamily: 'monospace',
+        fontSize: (10 + Math.random() * 22) + 'px',
+        fontWeight: '900',
+        color: ['#3b82f6', '#06b6d4', '#ef4444', '#8b5cf6'][Math.floor(Math.random() * 4)],
+        textShadow: '0 0 10px currentColor',
+        pointerEvents: 'none',
+        zIndex: '99999',
+        opacity: '0',
+        transition: 'opacity 0.05s',
+        letterSpacing: '2px',
+      });
+      el.textContent = chars;
+      document.body.appendChild(el);
+      requestAnimationFrame(() => { el.style.opacity = (0.6 + Math.random() * 0.4).toString(); });
+      setTimeout(() => el.remove(), 300 + Math.random() * 800);
+    }, i * 130);
+  }
+
+  // Clean up after 3.5 seconds
+  setTimeout(() => {
+    clearInterval(tearInterval);
+    clearInterval(filterInterval);
+    document.body.style.filter = '';
+    document.body.classList.remove('hack-active');
+    overlay.style.transition = 'opacity 0.4s';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 400);
+  }, 3500);
+}
+
+/* ----------------------------------------------------------
+   SUDO — Terminal denial screen types in the corner
+   ---------------------------------------------------------- */
+function eggSudo() {
+  const lines = [
+    '$ sudo rm -rf /dev/brain',
+    '',
+    '[sudo] password for visitor: ',
+    'Sorry, try again.',
+    '[sudo] password for visitor: ',
+    'Sorry, try again.',
+    '[sudo] password for visitor: ',
+    '',
+    'sudo: 3 incorrect password attempts',
+    'This incident will be reported.',
+    '',
+    '>> Broadcasting to syslog...',
+    '>> Notifying admin@dhakshan.dev',
+    '>> Banned. Have a nice day. 👋',
+  ];
+
+  const terminal = document.createElement('div');
+  Object.assign(terminal.style, {
+    position: 'fixed', bottom: '24px', left: '24px',
+    background: 'rgba(6,6,10,0.97)',
+    border: '1px solid #ef4444',
+    borderRadius: '8px',
+    padding: '16px 20px',
+    fontFamily: 'monospace',
+    fontSize: '13px',
+    color: '#ef4444',
+    maxWidth: '420px',
+    zIndex: '99999',
+    boxShadow: '0 0 30px rgba(239,68,68,0.4), inset 0 0 20px rgba(239,68,68,0.05)',
+    pointerEvents: 'none',
+    lineHeight: '1.6',
+    whiteSpace: 'pre',
+  });
+  document.body.appendChild(terminal);
+
+  let text = '';
+  let li = 0;
+  let ci = 0;
+
+  function typeNext() {
+    if (li >= lines.length) {
+      setTimeout(() => {
+        terminal.style.transition = 'opacity 0.5s';
+        terminal.style.opacity = '0';
+        setTimeout(() => terminal.remove(), 500);
+      }, 1800);
+      return;
+    }
+    const line = lines[li];
+    if (ci < line.length) {
+      text += line[ci++];
+      terminal.textContent = text;
+      setTimeout(typeNext, 28 + Math.random() * 40);
+    } else {
+      text += '\n';
+      terminal.textContent = text;
+      li++; ci = 0;
+      setTimeout(typeNext, li === 2 ? 600 : 120);
+    }
+  }
+  typeNext();
+}
+
+/* ----------------------------------------------------------
+   COFFEE — Warm amber bloom + floating steam particles
+   ---------------------------------------------------------- */
+function eggCoffee() {
+  // Warm amber tint overlay
+  const glow = document.createElement('div');
+  Object.assign(glow.style, {
+    position: 'fixed', inset: '0',
+    background: 'radial-gradient(ellipse at 50% 100%, rgba(245,158,11,0.18) 0%, transparent 70%)',
+    pointerEvents: 'none', zIndex: '99997',
+    opacity: '0', transition: 'opacity 0.6s',
+  });
+  document.body.appendChild(glow);
+  requestAnimationFrame(() => { glow.style.opacity = '1'; });
+
+  // Apply warm filter to body
+  document.body.style.transition = 'filter 0.5s';
+  document.body.style.filter = 'sepia(0.25) saturate(1.2) brightness(1.05)';
+
+  // Floating steam particles from bottom
+  const steamChars = ['~', '∿', '≈', '꩜', '☁'];
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      const startX = 30 + Math.random() * 40; // center cluster
+      const drift = (Math.random() - 0.5) * 120;
+      Object.assign(p.style, {
+        position: 'fixed',
+        bottom: '-30px',
+        left: startX + '%',
+        fontSize: (12 + Math.random() * 20) + 'px',
+        color: `rgba(245,158,11,${0.3 + Math.random() * 0.5})`,
+        textShadow: '0 0 12px rgba(245,158,11,0.6)',
+        pointerEvents: 'none',
+        zIndex: '99999',
+        transition: `bottom 2.5s ease-out, transform 2.5s ease-in-out, opacity 2.5s ease`,
+        opacity: '1',
+      });
+      p.textContent = steamChars[Math.floor(Math.random() * steamChars.length)];
+      document.body.appendChild(p);
+      requestAnimationFrame(() => {
+        p.style.bottom = (50 + Math.random() * 50) + 'vh';
+        p.style.transform = `translateX(${drift}px) scale(${0.5 + Math.random()}) rotate(${(Math.random() - 0.5) * 40}deg)`;
+        p.style.opacity = '0';
+      });
+      setTimeout(() => p.remove(), 2700);
+    }, i * 120);
+  }
+
+  // Big ☕ emoji that blooms from center
+  const cup = document.createElement('div');
+  Object.assign(cup.style, {
+    position: 'fixed', top: '50%', left: '50%',
+    transform: 'translate(-50%, -50%) scale(0)',
+    fontSize: '80px',
+    zIndex: '99999',
+    pointerEvents: 'none',
+    transition: 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s',
+    filter: 'drop-shadow(0 0 30px rgba(245,158,11,0.9))',
+    opacity: '0',
+  });
+  cup.textContent = '☕';
+  document.body.appendChild(cup);
+  requestAnimationFrame(() => {
+    cup.style.transform = 'translate(-50%, -50%) scale(1)';
+    cup.style.opacity = '1';
+  });
+  setTimeout(() => {
+    cup.style.transform = 'translate(-50%, -50%) scale(2)';
+    cup.style.opacity = '0';
+    setTimeout(() => cup.remove(), 500);
+  }, 1500);
+
+  // Clean up
+  setTimeout(() => {
+    document.body.style.filter = '';
+    glow.style.opacity = '0';
+    setTimeout(() => glow.remove(), 600);
+  }, 3000);
+}
+
+/* ----------------------------------------------------------
+   NMAP — Full-screen "scanning" animation with port readout
+   ---------------------------------------------------------- */
+function eggNmap() {
+  const overlay = document.createElement('div');
+  Object.assign(overlay.style, {
+    position: 'fixed', inset: '0',
+    background: 'rgba(6,6,10,0.93)',
+    zIndex: '999999',
+    fontFamily: 'monospace',
+    fontSize: '13px',
+    color: '#06b6d4',
+    padding: 'clamp(20px,5vw,60px)',
+    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+    overflow: 'hidden',
+    cursor: 'pointer',
+  });
+
+  const target = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+  const ports = [
+    { port: 22, state: 'open', service: 'ssh', version: 'OpenSSH 9.3' },
+    { port: 80, state: 'open', service: 'http', version: 'nginx 1.24.0' },
+    { port: 443, state: 'open', service: 'https', version: 'TLSv1.3' },
+    { port: 3306, state: 'filtered', service: 'mysql', version: '' },
+    { port: 8080, state: 'open', service: 'http-alt', version: 'Apache Tomcat' },
+    { port: 9200, state: 'open', service: 'wap-wsp', version: 'Elasticsearch 8.9' },
+    { port: 6379, state: 'filtered', service: 'redis', version: '' },
+    { port: 1337, state: 'open', service: '???', version: 'dhakshan.portfolio' },
+  ];
+
+  const pre = document.createElement('pre');
+  Object.assign(pre.style, { margin: '0', lineHeight: '1.7', color: '#06b6d4', maxWidth: '680px' });
+  overlay.appendChild(pre);
+
+  const hint = document.createElement('div');
+  Object.assign(hint.style, { position: 'absolute', bottom: '20px', right: '24px', color: 'rgba(6,182,212,0.4)', fontSize: '11px' });
+  hint.textContent = '[ click to dismiss ]';
+  overlay.appendChild(hint);
+
+  document.body.appendChild(overlay);
+
+  const dismiss = () => {
+    overlay.style.transition = 'opacity 0.4s';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 400);
+  };
+  overlay.addEventListener('click', dismiss);
+
+  const header = [
+    `Starting Nmap 7.94 ( https://nmap.org )`,
+    `Nmap scan report for target (${target})`,
+    `Host is up (0.00${Math.floor(Math.random() * 9) + 1}2s latency).`,
+    ``,
+    `PORT      STATE     SERVICE     VERSION`,
+  ];
+
+  let output = '';
+  const allLines = [...header,
+  ...ports.map(p => {
+    const ps = String(p.port + '/tcp').padEnd(10);
+    const st = p.state.padEnd(10);
+    const sv = p.service.padEnd(12);
+    return ps + st + sv + p.version;
+  }),
+    ``,
+    `Service detection performed. Please report any incorrect results.`,
+  `Nmap done: 1 IP address (1 host up) scanned in ${(0.5 + Math.random() * 3).toFixed(2)}s`,
+    ``,
+    `>> VULNERABILITY DETECTED: CVE-2024-XXXX on port 1337`,
+    `>> PAYLOAD DEPLOYED. AWAITING CALLBACK...`,
+    `>> SHELL ESTABLISHED. WELCOME, ROOT.`,
+  ];
+
+  let li = 0;
+  function addLine() {
+    if (li >= allLines.length) return;
+    const line = allLines[li++];
+    // Color coding
+    let colored = line
+      .replace(/open/g, `\x1b[0mopen\x1b[0m`)
+      .replace(/filtered/g, 'filtered');
+    output += line + '\n';
+    // Simple color via innerHTML spans
+    const lineEl = document.createElement('div');
+    if (line.includes('open')) lineEl.style.color = '#10b981';
+    else if (line.includes('filtered')) lineEl.style.color = '#f59e0b';
+    else if (line.includes('VULNERABILITY') || line.includes('PAYLOAD') || line.includes('SHELL')) {
+      lineEl.style.color = '#ef4444';
+      lineEl.style.fontWeight = '900';
+      lineEl.style.textShadow = '0 0 10px rgba(239,68,68,0.7)';
+    } else if (line.startsWith('PORT')) {
+      lineEl.style.color = '#8b5cf6';
+      lineEl.style.fontWeight = 'bold';
+    }
+    lineEl.textContent = line;
+    pre.appendChild(lineEl);
+    setTimeout(addLine, 90 + Math.random() * 60);
+  }
+  addLine();
+
+  setTimeout(dismiss, 8000);
+}
+
+/* ----------------------------------------------------------
+   PWNED — Red skull takeover with matrix-red rain
+   ---------------------------------------------------------- */
+function eggPwned() {
+  if (!document.getElementById('egg-pwned-style')) {
+    const s = document.createElement('style');
+    s.id = 'egg-pwned-style';
+    s.textContent = `
+      @keyframes pwnedPulse {
+        0%,100%{text-shadow:0 0 20px #ef4444,0 0 60px #ef4444}
+        50%{text-shadow:0 0 60px #ef4444,0 0 120px #ef4444,0 0 180px #ef4444}
+      }
+      @keyframes pwnedShake {
+        0%,100%{transform:translate(-50%,-50%) scale(1)}
+        25%{transform:translate(calc(-50% - 6px),calc(-50% + 3px)) scale(1.02)}
+        75%{transform:translate(calc(-50% + 6px),calc(-50% - 3px)) scale(0.98)}
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  // Red matrix rain canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  Object.assign(canvas.style, {
+    position: 'fixed', inset: '0', zIndex: '999997', pointerEvents: 'none',
+  });
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const cols = Math.floor(canvas.width / 14);
+  const drops = Array(cols).fill(0);
+  const chars = '01アカタナハ#@!%&PWNED';
+  const rain = setInterval(() => {
+    ctx.fillStyle = 'rgba(6,6,10,0.08)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '14px monospace';
+    for (let i = 0; i < drops.length; i++) {
+      ctx.fillStyle = Math.random() > 0.95 ? '#fff' : (Math.random() > 0.7 ? '#ef4444' : 'rgba(239,68,68,0.6)');
+      ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 14, drops[i] * 14);
+      if (drops[i] * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }, 33);
+
+  // Dark overlay
+  const overlay = document.createElement('div');
+  Object.assign(overlay.style, {
+    position: 'fixed', inset: '0',
+    background: 'rgba(6,6,10,0.6)',
+    zIndex: '999998', cursor: 'pointer',
+  });
+  document.body.appendChild(overlay);
+
+  // Skull + message
+  const skull = document.createElement('div');
+  Object.assign(skull.style, {
+    position: 'fixed', top: '50%', left: '50%',
+    transform: 'translate(-50%, -50%)',
+    textAlign: 'center', zIndex: '999999',
+    pointerEvents: 'none',
+    animation: 'pwnedPulse 1.5s ease infinite, pwnedShake 0.12s linear infinite',
+  });
+  skull.innerHTML = `
+    <div style="font-size:clamp(60px,15vw,120px);line-height:1;filter:drop-shadow(0 0 30px #ef4444)">💀</div>
+    <div style="font-family:monospace;font-size:clamp(1.2rem,4vw,2.5rem);font-weight:900;
+      color:#ef4444;letter-spacing:0.2em;margin-top:16px;
+      text-shadow:0 0 20px #ef4444,0 0 40px #ef4444;">
+      P W N E D
+    </div>
+    <div style="font-family:monospace;font-size:clamp(0.7rem,2vw,1rem);color:#f87171;
+      margin-top:12px;letter-spacing:3px;opacity:0.9;">
+      ROOT SHELL ESTABLISHED · SESSION ACTIVE
+    </div>
+    <div style="font-family:monospace;font-size:0.75rem;color:rgba(248,113,113,0.5);
+      margin-top:8px;letter-spacing:1px;">
+      click anywhere to exit
+    </div>
+  `;
+  document.body.appendChild(skull);
+
+  const dismiss = () => {
+    clearInterval(rain);
+    [canvas, overlay, skull].forEach(el => {
+      el.style.transition = 'opacity 0.5s';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 500);
+    });
+  };
+
+  overlay.addEventListener('click', dismiss);
+  setTimeout(dismiss, 6000);
+}
+
+/* ============================================================
+   EASTER EGG: TRIPLE-CLICK PARTICLE BURST
+   Triple-click anywhere to spray neon matrix particles
+   ============================================================ */
+function initTripleClickBurst() {
+  let clickCount = 0;
+  let clickTimer = null;
+
+  document.addEventListener('click', (e) => {
+    const tag = e.target.tagName.toLowerCase();
+    if (['a', 'button', 'input', 'textarea', 'select'].includes(tag)) return;
+    clickCount++;
+    clearTimeout(clickTimer);
+    clickTimer = setTimeout(() => { clickCount = 0; }, 500);
+    if (clickCount >= 3) { clickCount = 0; spawnBurst(e.clientX, e.clientY); }
+  });
+
+  function spawnBurst(x, y) {
+    const colors = ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
+    const matrixChars = '01アイウエカ#@$%!?';
+    const count = 36;
+
+    // Shockwave ring
+    const ring = document.createElement('div');
+    Object.assign(ring.style, {
+      position: 'fixed', left: x + 'px', top: y + 'px',
+      width: '0px', height: '0px',
+      borderRadius: '50%',
+      border: '2px solid #06b6d4',
+      boxShadow: '0 0 20px #06b6d4, inset 0 0 20px rgba(6,182,212,0.3)',
+      transform: 'translate(-50%, -50%)',
+      pointerEvents: 'none', zIndex: '99999',
+      transition: 'width 0.6s ease-out, height 0.6s ease-out, opacity 0.6s ease-out',
+      opacity: '1',
+    });
+    document.body.appendChild(ring);
+    requestAnimationFrame(() => {
+      ring.style.width = '220px';
+      ring.style.height = '220px';
+      ring.style.opacity = '0';
+    });
+    setTimeout(() => ring.remove(), 700);
+
+    // Particles
+    for (let i = 0; i < count; i++) {
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+      const speed = 60 + Math.random() * 130;
+      const size = 5 + Math.random() * 9;
+      const isChar = Math.random() > 0.45;
+      const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+
+      const p = document.createElement('div');
+      Object.assign(p.style, {
+        position: 'fixed', left: x + 'px', top: y + 'px',
+        width: size + 'px', height: size + 'px',
+        borderRadius: isChar ? '2px' : '50%',
+        background: isChar ? 'transparent' : color,
+        color, fontSize: size + 'px',
+        fontFamily: 'monospace', fontWeight: '900',
+        boxShadow: isChar ? `0 0 ${size}px ${color}` : `0 0 ${size * 2}px ${color}`,
+        textShadow: `0 0 8px ${color}`,
+        pointerEvents: 'none', zIndex: '99999',
+        transform: 'translate(-50%, -50%) scale(1)',
+        opacity: '1',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      });
+      if (isChar) p.textContent = char;
+
+      document.body.appendChild(p);
+
+      const dx = Math.cos(angle) * speed;
+      const dy = Math.sin(angle) * speed;
+      const rot = (Math.random() - 0.5) * 720;
+
+      requestAnimationFrame(() => {
+        p.style.transition = `transform 0.9s cubic-bezier(0.2,0.8,0.3,1), opacity 0.9s ease`;
+        p.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.2) rotate(${rot}deg)`;
+        p.style.opacity = '0';
+      });
+      setTimeout(() => p.remove(), 1000);
+    }
+  }
+}
+
+/* ============================================================
+   EASTER EGG: IDLE / INACTIVITY
+   After 40s of no interaction — subtle ghost screensaver wave
+   ============================================================ */
+function initIdleEasterEgg() {
+  let idleTimer = null;
+  let shownCount = 0;
+  let active = false;
+
+  function resetTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(fireIdle, 40000);
+  }
+
+  function fireIdle() {
+    if (active) return;
+    active = true;
+    shownCount++;
+
+    const effects = [idleGhostText, idleGlitchWave, idleMatrixPulse];
+    effects[shownCount % effects.length](() => { active = false; resetTimer(); });
+  }
+
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt =>
+    document.addEventListener(evt, resetTimer, { passive: true })
+  );
+  resetTimer();
+}
+
+function idleGhostText(done) {
+  const phrases = [
+    'still here?', 'ping...', 'are you awake?', '/dev/null', 'session idle',
+    'no activity detected', 'hello?', 'press any key...'
+  ];
+  const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+  const el = document.createElement('div');
+  Object.assign(el.style, {
+    position: 'fixed', top: '50%', left: '50%',
+    transform: 'translate(-50%, -50%)',
+    fontFamily: 'monospace', fontSize: 'clamp(1.5rem,5vw,3rem)',
+    color: 'rgba(59,130,246,0.0)', letterSpacing: '0.3em',
+    pointerEvents: 'none', zIndex: '99999',
+    transition: 'color 1s, text-shadow 1s',
+    textTransform: 'uppercase',
+  });
+  el.textContent = phrase;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => {
+    el.style.color = 'rgba(59,130,246,0.3)';
+    el.style.textShadow = '0 0 40px rgba(59,130,246,0.5)';
+  });
+  setTimeout(() => {
+    el.style.color = 'rgba(59,130,246,0)';
+    el.style.textShadow = '';
+    setTimeout(() => { el.remove(); done(); }, 1000);
+  }, 3000);
+}
+
+function idleGlitchWave(done) {
+  // Quick scanline wave across the whole screen
+  const overlay = document.createElement('div');
+  Object.assign(overlay.style, {
+    position: 'fixed', inset: '0',
+    background: 'repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(59,130,246,0.04) 3px, rgba(59,130,246,0.04) 4px)',
+    pointerEvents: 'none', zIndex: '99997',
+    opacity: '0', transition: 'opacity 0.3s',
+  });
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+  let t = 0;
+  const tick = setInterval(() => {
+    t++;
+    overlay.style.backgroundPosition = `0 ${t * 2}px`;
+    if (t > 30) {
+      clearInterval(tick);
+      overlay.style.opacity = '0';
+      setTimeout(() => { overlay.remove(); done(); }, 400);
+    }
+  }, 50);
+}
+
+function idleMatrixPulse(done) {
+  // Brief matrix column flash once across screen
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  Object.assign(canvas.style, {
+    position: 'fixed', inset: '0', zIndex: '99997',
+    pointerEvents: 'none', opacity: '0',
+    transition: 'opacity 0.4s',
+  });
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const cols = Math.floor(canvas.width / 18);
+  const drops = Array.from({ length: cols }, () => -Math.random() * canvas.height / 18);
+  const chars = '01アカ#@';
+  requestAnimationFrame(() => { canvas.style.opacity = '1'; });
+
+  let frames = 0;
+  const tick = setInterval(() => {
+    frames++;
+    ctx.fillStyle = 'rgba(6,6,10,0.15)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '16px monospace';
+    for (let i = 0; i < drops.length; i++) {
+      ctx.fillStyle = `rgba(59,130,246,${0.3 + Math.random() * 0.5})`;
+      ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 18, drops[i] * 18);
+      drops[i]++;
+    }
+    if (frames > 50) {
+      clearInterval(tick);
+      canvas.style.opacity = '0';
+      setTimeout(() => { canvas.remove(); done(); }, 500);
+    }
+  }, 40);
+}
+
+/* ============================================================
+   EASTER EGG: LOGO CLICK SEQUENCE
+   Click the nav logo 5× quickly → ACCESS GRANTED takeover
+   ============================================================ */
+function initLogoClickEgg() {
+  const logo = document.querySelector('.nav-logo');
+  if (!logo) return;
+
+  let clicks = 0;
+  let timer = null;
+
+  logo.addEventListener('click', (e) => {
+    e.preventDefault();
+    clicks++;
+    clearTimeout(timer);
+    timer = setTimeout(() => { clicks = 0; }, 2000);
+
+    // Shake logo on each click
+    logo.style.transition = 'transform 0.05s';
+    logo.style.transform = `scale(1.3) rotate(${(Math.random() - 0.5) * 20}deg)`;
+    setTimeout(() => { logo.style.transform = ''; logo.style.transition = ''; }, 150);
+
+    if (clicks >= 5) {
+      clicks = 0;
+      eggAccessGranted();
+    }
+  });
+}
+
+function eggAccessGranted() {
+  if (!document.getElementById('egg-access-style')) {
+    const s = document.createElement('style');
+    s.id = 'egg-access-style';
+    s.textContent = `
+      @keyframes agScan { 0%{top:-5%} 100%{top:110%} }
+      @keyframes agPulse {
+        0%,100%{text-shadow:0 0 20px #10b981,0 0 60px #10b981}
+        50%{text-shadow:0 0 60px #10b981,0 0 120px #10b981,0 0 200px #10b981}
+      }
+      @keyframes agFadeIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.9)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+      .ag-scanline {
+        position:absolute;left:0;width:100%;height:4px;
+        background:rgba(16,185,129,0.5);
+        box-shadow:0 0 20px rgba(16,185,129,0.9);
+        animation:agScan 1.4s linear infinite;
+        pointer-events:none;
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  const overlay = document.createElement('div');
+  Object.assign(overlay.style, {
+    position: 'fixed', inset: '0',
+    background: 'rgba(6,6,10,0.97)',
+    zIndex: '999999', cursor: 'pointer',
+    overflow: 'hidden',
+  });
+  overlay.innerHTML = `<div class="ag-scanline"></div>`;
+  document.body.appendChild(overlay);
+
+  const content = document.createElement('div');
+  Object.assign(content.style, {
+    position: 'fixed', top: '50%', left: '50%',
+    transform: 'translate(-50%, -50%)',
+    textAlign: 'center', zIndex: '9999999',
+    pointerEvents: 'none',
+    animation: 'agFadeIn 0.5s ease forwards',
+  });
+  content.innerHTML = `
+    <div style="font-family:monospace;font-size:clamp(0.8rem,2vw,1rem);color:rgba(16,185,129,0.6);
+      letter-spacing:4px;margin-bottom:20px;">BIOMETRIC SCAN COMPLETE</div>
+    <div style="font-family:monospace;font-size:clamp(2rem,8vw,5rem);font-weight:900;
+      color:#10b981;letter-spacing:0.12em;
+      animation:agPulse 2s ease infinite;">
+      ACCESS GRANTED
+    </div>
+    <div style="font-family:monospace;font-size:clamp(0.7rem,1.5vw,0.95rem);
+      color:#06b6d4;margin-top:20px;letter-spacing:3px;opacity:0.9;">
+      WELCOME TO THE INNER SANCTUM, HACKER.
+    </div>
+    <div style="font-family:monospace;font-size:0.7rem;color:rgba(16,185,129,0.4);
+      margin-top:30px;letter-spacing:2px;">[ CLICK ANYWHERE TO EXIT ]</div>
+  `;
+  document.body.appendChild(content);
+
+  // Green particle rain
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  Object.assign(canvas.style, {
+    position: 'fixed', inset: '0', zIndex: '999998', pointerEvents: 'none',
+  });
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const cols = Math.floor(canvas.width / 16);
+  const drops = Array(cols).fill(0);
+  const chars = '01アカタナ#ACCESS';
+  const rain = setInterval(() => {
+    ctx.fillStyle = 'rgba(6,6,10,0.06)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '14px monospace';
+    for (let i = 0; i < drops.length; i++) {
+      ctx.fillStyle = Math.random() > 0.95 ? '#fff' : (Math.random() > 0.6 ? '#10b981' : 'rgba(16,185,129,0.5)');
+      ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 16, drops[i] * 16);
+      if (drops[i] * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }, 35);
+
+  const dismiss = () => {
+    clearInterval(rain);
+    [overlay, content, canvas].forEach(el => {
+      el.style.transition = 'opacity 0.5s';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 500);
+    });
+  };
+  overlay.addEventListener('click', dismiss);
+  setTimeout(dismiss, 6000);
 }
 
