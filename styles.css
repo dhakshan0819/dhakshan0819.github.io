@@ -74,6 +74,8 @@ body {
   font-size: 15px;
   line-height: 1.7;
   overflow-x: hidden;
+  isolation: isolate;
+  /* Ensures negative z-index background layers stay above body background */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -215,6 +217,85 @@ img {
 /* ==========================
    BACKGROUND LAYERS
    ========================== */
+
+/* ---- Tron Grid ---- */
+.tron-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  overflow: hidden;
+  perspective: 600px;
+  perspective-origin: 50% 40%;
+}
+
+.tron-grid-inner {
+  position: absolute;
+  /* Make it tall and wide so it fills after perspective */
+  width: 200%;
+  height: 200%;
+  left: -50%;
+  top: -30%;
+  transform-origin: 50% 40%;
+  transform: rotateX(70deg);
+  background-image:
+    /* Horizontal lines */
+    repeating-linear-gradient(0deg,
+      transparent,
+      transparent calc(var(--tron-cell) - 1px),
+      rgba(6, 182, 212, 0.18) calc(var(--tron-cell) - 1px),
+      rgba(6, 182, 212, 0.18) var(--tron-cell)),
+    /* Vertical lines */
+    repeating-linear-gradient(90deg,
+      transparent,
+      transparent calc(var(--tron-cell) - 1px),
+      rgba(6, 182, 212, 0.18) calc(var(--tron-cell) - 1px),
+      rgba(6, 182, 212, 0.18) var(--tron-cell));
+  --tron-cell: 60px;
+  animation: tronScroll 6s linear infinite;
+}
+
+/* Fade the top (horizon) to black so it blends */
+.tron-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+      var(--bg-base) 0%,
+      transparent 35%,
+      transparent 70%,
+      var(--bg-base) 100%);
+  pointer-events: none;
+}
+
+/* Subtle horizon glow line */
+.tron-grid::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 38%;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(6, 182, 212, 0.4) 20%,
+      rgba(59, 130, 246, 0.6) 50%,
+      rgba(6, 182, 212, 0.4) 80%,
+      transparent 100%);
+  box-shadow: 0 0 24px 4px rgba(6, 182, 212, 0.25);
+  pointer-events: none;
+}
+
+@keyframes tronScroll {
+  from {
+    background-position: 0 0, 0 0;
+  }
+
+  to {
+    background-position: 0 var(--tron-cell), 0 0;
+  }
+}
+
 #neural-bg {
   position: fixed;
   inset: 0;
@@ -2056,7 +2137,7 @@ terminal-line {
 .net-console {
   position: relative;
   background: #0a0a0c;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
   overflow: hidden;
   display: grid;
@@ -2064,9 +2145,9 @@ terminal-line {
   grid-template-rows: auto;
   min-height: 480px;
   box-shadow:
-    0 0 0 1px rgba(59,130,246,0.08),
-    0 32px 80px rgba(0,0,0,0.7),
-    inset 0 1px 0 rgba(255,255,255,0.04);
+    0 0 0 1px rgba(59, 130, 246, 0.08),
+    0 32px 80px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 /* Canvas fills the background of the whole console */
@@ -2086,9 +2167,9 @@ terminal-line {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255,255,255,0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(4px);
-  background: rgba(10,10,12,0.6);
+  background: rgba(10, 10, 12, 0.6);
 }
 
 .net-ssh-bar {
@@ -2096,8 +2177,8 @@ terminal-line {
   align-items: center;
   gap: 8px;
   padding: 11px 18px;
-  background: rgba(255,255,255,0.03);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
 }
 
@@ -2146,16 +2227,38 @@ terminal-line {
   gap: 8px;
 }
 
-.nsl-prompt  { color: var(--success); font-weight: 700; flex-shrink: 0; }
-.nsl-cmd     { color: #c9d1d9; }
-.nsl-out     { color: var(--text-tertiary); font-size: 0.68rem; padding-left: 18px; flex: 1; }
-.nsl-ok      { color: var(--success); font-size: 0.68rem; padding-left: 18px; }
-.nsl-cursor  { color: var(--accent); animation: cursorBlink 1s step-end infinite; }
+.nsl-prompt {
+  color: var(--success);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.nsl-cmd {
+  color: #c9d1d9;
+}
+
+.nsl-out {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  padding-left: 18px;
+  flex: 1;
+}
+
+.nsl-ok {
+  color: var(--success);
+  font-size: 0.68rem;
+  padding-left: 18px;
+}
+
+.nsl-cursor {
+  color: var(--accent);
+  animation: cursorBlink 1s step-end infinite;
+}
 
 .net-divider {
   font-family: var(--font-mono);
   font-size: 0.62rem;
-  color: rgba(255,255,255,0.15);
+  color: rgba(255, 255, 255, 0.15);
   letter-spacing: 0.5px;
   margin: 12px 0 8px;
 }
@@ -2168,8 +2271,8 @@ terminal-line {
   gap: 14px;
   padding: 12px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
   text-decoration: none;
   transition: border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
   margin: 4px 0;
@@ -2177,9 +2280,9 @@ terminal-line {
 
 .ssh-card:hover {
   border-color: var(--accent);
-  background: rgba(59,130,246,0.08);
+  background: rgba(59, 130, 246, 0.08);
   transform: translateX(4px);
-  box-shadow: 0 0 20px rgba(59,130,246,0.15);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
 }
 
 .ssh-card-proto {
@@ -2197,20 +2300,20 @@ terminal-line {
   border-radius: 3px;
   color: #10b981;
   border: 1px solid #10b981;
-  background: rgba(16,185,129,0.1);
+  background: rgba(16, 185, 129, 0.1);
   white-space: nowrap;
 }
 
 .ssh-badge.badge-blue {
   color: #3b82f6;
   border-color: #3b82f6;
-  background: rgba(59,130,246,0.08);
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .ssh-badge.badge-purple {
   color: #8b5cf6;
   border-color: #8b5cf6;
-  background: rgba(139,92,246,0.08);
+  background: rgba(139, 92, 246, 0.08);
 }
 
 .ssh-status-dot {
@@ -2272,7 +2375,7 @@ terminal-line {
   flex-direction: column;
   gap: 20px;
   backdrop-filter: blur(4px);
-  background: rgba(10,10,12,0.4);
+  background: rgba(10, 10, 12, 0.4);
 }
 
 .net-legend-title {
@@ -2304,10 +2407,25 @@ terminal-line {
   flex-shrink: 0;
 }
 
-.nnl-dot.cyan   { background: #06b6d4; box-shadow: 0 0 8px #06b6d4; }
-.nnl-dot.green  { background: #10b981; box-shadow: 0 0 8px #10b981; }
-.nnl-dot.blue   { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
-.nnl-dot.purple { background: #8b5cf6; box-shadow: 0 0 8px #8b5cf6; }
+.nnl-dot.cyan {
+  background: #06b6d4;
+  box-shadow: 0 0 8px #06b6d4;
+}
+
+.nnl-dot.green {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.nnl-dot.blue {
+  background: #3b82f6;
+  box-shadow: 0 0 8px #3b82f6;
+}
+
+.nnl-dot.purple {
+  background: #8b5cf6;
+  box-shadow: 0 0 8px #8b5cf6;
+}
 
 .nnl-label {
   color: #c9d1d9;
@@ -2326,7 +2444,7 @@ terminal-line {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   padding-top: 14px;
 }
 
@@ -2350,8 +2468,17 @@ terminal-line {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr auto;
   }
-  .net-ssh { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  .net-legend { flex-direction: row; flex-wrap: wrap; padding: 16px; }
+
+  .net-ssh {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .net-legend {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 16px;
+  }
 }
 
 
@@ -2587,21 +2714,144 @@ button,
   cursor: crosshair;
 }
 
-.cursor-spotlight {
+/* ==========================
+   TRON CURSOR
+   ========================== */
+
+
+
+/* Trail canvas sits just below the cursor elements */
+#tron-trail-canvas {
   position: fixed;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.04), transparent 70%);
+  inset: 0;
   pointer-events: none;
-  z-index: 9997;
+  z-index: 99996;
+}
+
+/* Outer rotating ring — clean gamified HUD reticle */
+.tron-cursor-ring {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99997;
   transform: translate(-50%, -50%);
-  transition: opacity 0.3s;
+  transition: opacity 0.25s, width 0.2s ease, height 0.2s ease, border-color 0.2s, background-color 0.2s;
+  opacity: 0;
+
+  /* Clean HUD ring */
+  border: 1.5px solid rgba(6, 182, 212, 0.3);
+  border-top-color: rgba(6, 182, 212, 1);
+  border-bottom-color: rgba(6, 182, 212, 1);
+  animation: tronRingSpin 4s linear infinite;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.2) inset, 0 0 10px rgba(6, 182, 212, 0.2);
+}
+
+/* Inner crosshair dot */
+.tron-cursor-dot {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 1);
+  transition: opacity 0.25s, width 0.15s, height 0.15s, background-color 0.2s;
   opacity: 0;
 }
 
-.cursor-spotlight.active {
+/* Crosshair tick marks - clean HUD style */
+.tron-cursor-cross {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.tron-cursor-cross::before,
+.tron-cursor-cross::after {
+  content: '';
+  position: absolute;
+  background: rgba(6, 182, 212, 0.9);
+}
+
+/* Horizontal ticks */
+.tron-cursor-cross::before {
+  width: 100%;
+  height: 1px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  /* Gap in the middle for the dot */
+  -webkit-mask: linear-gradient(90deg, black 30%, transparent 30%, transparent 70%, black 70%);
+  mask: linear-gradient(90deg, black 30%, transparent 30%, transparent 70%, black 70%);
+}
+
+/* Vertical ticks */
+.tron-cursor-cross::after {
+  width: 1px;
+  height: 100%;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  /* Gap in the middle for the dot */
+  -webkit-mask: linear-gradient(180deg, black 30%, transparent 30%, transparent 70%, black 70%);
+  mask: linear-gradient(180deg, black 30%, transparent 30%, transparent 70%, black 70%);
+}
+
+/* Active / visible state */
+.tron-cursor-ring.tron-active,
+.tron-cursor-dot.tron-active,
+.tron-cursor-cross.tron-active {
   opacity: 1;
+}
+
+/* Hover state — enlarge ring, shift to accent */
+.tron-cursor-ring.tron-hover {
+  width: 42px;
+  height: 42px;
+  border-color: rgba(251, 146, 60, 0.2);
+  border-left-color: rgba(251, 146, 60, 1);
+  border-right-color: rgba(251, 146, 60, 1);
+  border-top-color: rgba(251, 146, 60, 0.2);
+  border-bottom-color: rgba(251, 146, 60, 0.2);
+  background-color: rgba(251, 146, 60, 0.05);
+  box-shadow: 0 0 15px rgba(251, 146, 60, 0.3) inset, 0 0 15px rgba(251, 146, 60, 0.3);
+  animation-duration: 1.5s;
+}
+
+.tron-cursor-dot.tron-hover {
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  box-shadow: 0 0 12px rgba(251, 146, 60, 1);
+}
+
+.tron-cursor-cross.tron-hover::before,
+.tron-cursor-cross.tron-hover::after {
+  background: rgba(251, 146, 60, 0.9);
+}
+
+/* Click flash */
+.tron-cursor-ring.tron-click {
+  width: 50px;
+  height: 50px;
+  border-color: rgba(6, 182, 212, 1);
+  animation-duration: 0.1s;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.8) inset, 0 0 20px rgba(6, 182, 212, 0.8);
+}
+
+@keyframes tronRingSpin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 /* ==========================
@@ -2617,25 +2867,26 @@ button,
 }
 
 /* ==========================
-   ACHIEVEMENT TOASTS
+   INTRUSION ALERTS (formerly Achievement Toasts)
    ========================== */
 .achievement-toast {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
+  bottom: 24px;
+  right: 24px;
   z-index: 50000;
-  background: var(--bg-elevated);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-lg);
-  padding: 16px 24px;
+  background: rgba(20, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid #ef4444;
+  border-left: 4px solid #ef4444;
+  padding: 14px 20px;
   display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: var(--shadow-glow), var(--shadow-lg);
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
   transform: translateX(120%);
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  max-width: 340px;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  max-width: 380px;
+  font-family: var(--font-mono);
 }
 
 .achievement-toast.show {
@@ -2643,28 +2894,38 @@ button,
 }
 
 .achievement-toast.hide {
-  transform: translateX(150%);
+  transform: translateX(120%);
   transition: transform 0.3s ease-in;
 }
 
 .achievement-icon {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   flex-shrink: 0;
+  color: #ef4444;
+  filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.8));
+  margin-top: 2px;
+}
+
+.achievement-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .achievement-text h4 {
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 1px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  margin-bottom: 2px;
+  margin: 0;
 }
 
 .achievement-text p {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-size: 0.7rem;
+  color: #fca5a5;
+  line-height: 1.4;
+  margin: 0;
 }
 
 /* ==========================
@@ -3673,11 +3934,15 @@ button,
     animation: none !important;
   }
 
-  .cursor-spotlight {
-    display: none;
+  /* Tron cursor hidden on touch / coarse-pointer devices */
+  .tron-cursor-ring,
+  .tron-cursor-dot,
+  .tron-cursor-cross,
+  #tron-trail-canvas {
+    display: none !important;
   }
 
   body {
-    cursor: auto;
+    cursor: auto !important;
   }
 }

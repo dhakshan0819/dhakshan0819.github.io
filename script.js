@@ -4,6 +4,9 @@
    ==================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Cursor must init before boot so it is ready to track immediately
+  initCursorSpotlight();
+
   runBootSequence().then(() => {
     initNeuralBackground();
     initStatusRotator();
@@ -14,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initMobileNav();
     fetchGitHubProjects();
     initAboutInteractions();
-    initCursorSpotlight();
     initCardTilt();
     initAchievements();
     initKonamiCode();
@@ -869,26 +871,139 @@ function initContactExtras() {
 }
 
 /* ==========================
-   CURSOR SPOTLIGHT
+   TRON CURSOR
    ========================== */
 function initCursorSpotlight() {
-  const spotlight = document.getElementById('cursor-spotlight');
-  if (!spotlight) return;
+  const ring = document.getElementById('tron-ring');
+  const dot = document.getElementById('tron-dot');
+  const cross = document.getElementById('tron-cross');
+  const trailCanvas = document.getElementById('tron-trail-canvas');
+  if (!ring || !dot || !trailCanvas) return;
 
+  // Inject a global style to suppress the native cursor on ALL elements
+  const cursorStyle = document.createElement('style');
+  cursorStyle.textContent = '* { cursor: none !important; }';
+  document.head.appendChild(cursorStyle);
+
+  // ── Trail canvas setup ──────────────────────────────────────
+  const ctx = trailCanvas.getContext('2d');
+  let W = trailCanvas.width = window.innerWidth;
+  let H = trailCanvas.height = window.innerHeight;
+  window.addEventListener('resize', () => {
+    W = trailCanvas.width = window.innerWidth;
+    H = trailCanvas.height = window.innerHeight;
+  });
+
+  // Trail history: [{ x, y, age }]
+  const trail = [];
+  const TRAIL_MAX = 12;
+
+  // ── State ───────────────────────────────────────────────────
+  let mx = -200, my = -200;          // actual mouse pos
+  let rx = -200, ry = -200;          // ring (lagged)
   let active = false;
+  let isHover = false;
+
+  // ── Move listener ───────────────────────────────────────────
   document.addEventListener('mousemove', (e) => {
+    mx = e.clientX;
+    my = e.clientY;
     if (!active) {
       active = true;
-      spotlight.classList.add('active');
+      [ring, dot, cross].forEach(el => el && el.classList.add('tron-active'));
     }
-    spotlight.style.left = e.clientX + 'px';
-    spotlight.style.top = e.clientY + 'px';
   });
 
   document.addEventListener('mouseleave', () => {
     active = false;
-    spotlight.classList.remove('active');
+    [ring, dot, cross].forEach(el => el && el.classList.remove('tron-active'));
   });
+
+  // ── Hover on interactive elements ──────────────────────────
+  const hoverSel = 'a, button, .btn, .repo-row, .edb-row, .card, .ssh-card, .hacker-fact, .nav-link, [role="menuitem"]';
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest(hoverSel)) {
+      isHover = true;
+      ring.classList.add('tron-hover');
+      dot.classList.add('tron-hover');
+      cross.classList.add('tron-hover');
+    }
+  });
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest(hoverSel)) {
+      isHover = false;
+      ring.classList.remove('tron-hover');
+      dot.classList.remove('tron-hover');
+      cross.classList.remove('tron-hover');
+    }
+  });
+
+  // ── Click flash ────────────────────────────────────────────
+  document.addEventListener('mousedown', () => {
+    ring.classList.add('tron-click');
+    setTimeout(() => ring.classList.remove('tron-click'), 200);
+  });
+
+  // ── Animation loop ──────────────────────────────────────────
+  function tick() {
+    requestAnimationFrame(tick);
+    if (!active) { ctx.clearRect(0, 0, W, H); return; }
+
+    // Dot follows mouse exactly
+    dot.style.left = mx + 'px';
+    dot.style.top = my + 'px';
+    if (cross) { cross.style.left = mx + 'px'; cross.style.top = my + 'px'; }
+
+    // Ring lags behind for a fluid feel, made slightly faster
+    rx += (mx - rx) * 0.16;
+    ry += (my - ry) * 0.16;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+
+    // Push new trail point
+    trail.push({ x: mx, y: my, age: 0 });
+    if (trail.length > TRAIL_MAX) trail.shift();
+    trail.forEach(p => p.age++);
+
+    // Draw trail
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw outer glow trail
+    ctx.beginPath();
+    for (let i = 0; i < trail.length; i++) {
+      const p = trail[i];
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.strokeStyle = isHover ? 'rgba(251,146,60,0.1)' : 'rgba(6,182,212,0.1)';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Draw sharp inner trail
+    ctx.beginPath();
+    for (let i = 1; i < trail.length; i++) {
+      const a = trail[i - 1];
+      const b = trail[i];
+      const t = i / trail.length;           // 0→1 along trail
+      const alpha = Math.pow(t, 2);         // non-linear fade for electric look
+
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.strokeStyle = isHover
+        ? `rgba(251,146,60,${alpha * 0.9})`
+        : `rgba(6,182,212,${alpha * 0.9})`;
+      ctx.lineWidth = t * 1.5;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = isHover ? '#fb923c' : '#0ef';
+      ctx.shadowBlur = 6;
+      ctx.stroke();
+    }
+  }
+
+  tick();
 }
 
 /* ==========================
@@ -921,12 +1036,12 @@ function initCardTilt() {
    ========================== */
 function initAchievements() {
   const achievements = [
-    { id: 'home', icon: '🎯', title: 'Welcome', text: 'You found the portfolio!' },
-    { id: 'about', icon: '🔍', title: 'Recon Complete', text: 'Intel gathered on the target.' },
-    { id: 'experience', icon: '📜', title: 'History Logged', text: 'Timeline accessed successfully.' },
-    { id: 'projects', icon: '💻', title: 'Repos Loaded', text: 'GitHub data stream active.' },
-    { id: 'writeups', icon: '📝', title: 'Writeups Found', text: 'CTF knowledge unlocked.' },
-    { id: 'contact', icon: '📡', title: 'Signal Acquired', text: 'Communication channel open.' },
+    { id: 'home', icon: '⚠️', title: 'SYSTEM ALERT', text: 'Unauthorized access detected on main node.' },
+    { id: 'about', icon: '👁️', title: 'AUDIT LOG: RECON', text: 'Target profile enumeration in progress.' },
+    { id: 'experience', icon: '⏱️', title: 'TIMELINE EXFIL', text: 'Historical working memory extracted.' },
+    { id: 'projects', icon: '📂', title: 'SRC_DUMP_INIT', text: 'Deploying payloads to target repositories...' },
+    { id: 'writeups', icon: '🔓', title: '0-DAY FOUND', text: 'Vulnerability methodologies successfully scraped.' },
+    { id: 'contact', icon: '📡', title: 'C2 ESTABLISHED', text: 'Encrypted communication channel active.' },
   ];
 
   const shown = new Set();
@@ -1091,16 +1206,19 @@ function initKonamiCode() {
   function triggerMatrixRain() {
     matrixActive = true;
 
-    // Show badge
+    // Show breach badge
     const badge = document.createElement('div');
     badge.className = 'egg-badge';
-    badge.textContent = '🥚 Easter Egg Unlocked!';
+    badge.style.background = 'rgba(239, 68, 68, 0.9)';
+    badge.style.color = '#fff';
+    badge.style.textShadow = '0 0 10px #ff0000';
+    badge.innerHTML = '⚠️ CRITICAL: SYSTEM BREACH DETECTED ⚠️';
     document.body.appendChild(badge);
     requestAnimationFrame(() => badge.classList.add('show'));
     setTimeout(() => {
       badge.classList.remove('show');
       setTimeout(() => badge.remove(), 600);
-    }, 3000);
+    }, 4000);
 
     // Matrix rain
     const canvas = document.getElementById('matrix-canvas');
@@ -1126,10 +1244,10 @@ function initKonamiCode() {
         const x = i * fontSize;
         const y = drops[i] * fontSize;
 
-        // Color variation
-        if (Math.random() > 0.95) ctx.fillStyle = '#06b6d4';
-        else if (Math.random() > 0.9) ctx.fillStyle = '#8b5cf6';
-        else ctx.fillStyle = '#3b82f6';
+        // Scary red color variation
+        if (Math.random() > 0.95) ctx.fillStyle = '#f87171'; // light red
+        else if (Math.random() > 0.9) ctx.fillStyle = '#991b1b'; // dark red
+        else ctx.fillStyle = '#ef4444'; // base red
 
         ctx.fillText(char, x, y);
 
@@ -1199,25 +1317,20 @@ function initRandomGlitch() {
    ========================== */
 function initConsoleEasterEgg() {
   const art = `
-%c╔══════════════════════════════════════╗
-║                                      ║
-║     ██████╗  █████╗                   ║
-║     ██╔══██╗██╔══██╗                  ║
-║     ██║  ██║███████║                  ║
-║     ██║  ██║██╔══██║                  ║
-║     ██████╔╝██║  ██║                  ║
-║     ╚═════╝ ╚═╝  ╚═╝                 ║
-║                                      ║
-║  Dhakshan A · Cybersecurity          ║
-║  "You found the source code."       ║
-║                                      ║
-║  Try: ↑↑↓↓←→←→BA for a surprise    ║
-║                                      ║
-╚══════════════════════════════════════╝`;
+%c██████████████████████████████████████████████████████████████████
+██                                                              ██
+██   SYSTEM COMPROMISED. UNAUTHORIZED ACCESS DETECTED.          ██
+██                                                              ██
+██   Target: DHAKSHAN A // Security Architect                   ██
+██   Threat Level: CRITICAL                                     ██
+██                                                              ██
+██   Try: [↑] [↑] [↓] [↓] [←] [→] [←] [→] [B] [A]               ██
+██   or enter system bypass words to continue.                  ██
+██                                                              ██
+██████████████████████████████████████████████████████████████████`;
 
-  console.log(art, 'color: #3b82f6; font-family: monospace; font-size: 12px;');
-  console.log('%c👋 Looking for vulnerabilities? Smart. I like you.', 'color: #06b6d4; font-size: 14px; font-weight: bold;');
-  console.log('%c🥚 Hidden easter eggs: ↑↑↓↓←→←→BA · type "hack" · type "sudo" · type "coffee" · type "nmap" · type "pwned" · triple-click anywhere · click the logo 5×', 'color: #8b5cf6; font-size: 11px;');
+  console.log(art, 'color: #ef4444; font-family: monospace; font-size: 11px; font-weight: bold;');
+  console.log('%c[!] ALL ACTIONS ARE BEING LOGGED. PROCEED WITH CAUTION.', 'color: #f59e0b; font-size: 13px; font-weight: bold; background: #222; padding: 4px;');
 }
 
 /* ==========================
@@ -1860,43 +1973,55 @@ function eggHack() {
 }
 
 /* ----------------------------------------------------------
-   SUDO — Terminal denial screen types in the corner
+   SUDO — Severe Security Violation Alert
    ---------------------------------------------------------- */
 function eggSudo() {
   const lines = [
-    '$ sudo rm -rf /dev/brain',
+    'USER: anonymous',
+    'TTY: unknown',
+    'PWD: /',
+    'COMMAND: /usr/bin/sudo *',
     '',
-    '[sudo] password for visitor: ',
-    'Sorry, try again.',
-    '[sudo] password for visitor: ',
-    'Sorry, try again.',
-    '[sudo] password for visitor: ',
+    '-------------------------------------------------------',
+    '[!] SECURITY ALERT: UNAUTHORIZED PRIVILEGE ESCALATION',
+    '-------------------------------------------------------',
     '',
-    'sudo: 3 incorrect password attempts',
-    'This incident will be reported.',
+    '>> This incident has been logged.',
+    '>> Administrator dhakshan.dev has been notified.',
+    '>> Your IP has been flagged for analysis.',
     '',
-    '>> Broadcasting to syslog...',
-    '>> Notifying admin@dhakshan.dev',
-    '>> Banned. Have a nice day. 👋',
+    'Disconnecting session...',
   ];
 
   const terminal = document.createElement('div');
   Object.assign(terminal.style, {
     position: 'fixed', bottom: '24px', left: '24px',
-    background: 'rgba(6,6,10,0.97)',
+    background: 'rgba(20,0,0,0.95)',
     border: '1px solid #ef4444',
-    borderRadius: '8px',
+    borderRadius: '4px',
     padding: '16px 20px',
     fontFamily: 'monospace',
     fontSize: '13px',
     color: '#ef4444',
-    maxWidth: '420px',
+    maxWidth: '500px',
     zIndex: '99999',
-    boxShadow: '0 0 30px rgba(239,68,68,0.4), inset 0 0 20px rgba(239,68,68,0.05)',
+    boxShadow: '0 0 20px rgba(239,68,68,0.3), inset 0 0 10px rgba(239,68,68,0.1)',
     pointerEvents: 'none',
     lineHeight: '1.6',
     whiteSpace: 'pre',
   });
+
+  // Terminal header
+  const header = document.createElement('div');
+  Object.assign(header.style, {
+    background: '#ef4444', color: '#000', padding: '2px 8px',
+    marginBottom: '12px', fontWeight: 'bold', display: 'inline-block'
+  });
+  header.textContent = 'SYSTEM_SEC_DAEMON';
+  terminal.appendChild(header);
+
+  const body = document.createElement('div');
+  terminal.appendChild(body);
   document.body.appendChild(terminal);
 
   let text = '';
@@ -1909,103 +2034,97 @@ function eggSudo() {
         terminal.style.transition = 'opacity 0.5s';
         terminal.style.opacity = '0';
         setTimeout(() => terminal.remove(), 500);
-      }, 1800);
+      }, 3000);
       return;
     }
     const line = lines[li];
     if (ci < line.length) {
       text += line[ci++];
-      terminal.textContent = text;
-      setTimeout(typeNext, 28 + Math.random() * 40);
+      body.textContent = text;
+      setTimeout(typeNext, 15 + Math.random() * 20);
     } else {
       text += '\n';
-      terminal.textContent = text;
+      body.textContent = text;
       li++; ci = 0;
-      setTimeout(typeNext, li === 2 ? 600 : 120);
+      setTimeout(typeNext, 200);
     }
   }
   typeNext();
 }
 
 /* ----------------------------------------------------------
-   COFFEE — Warm amber bloom + floating steam particles
+   COFFEE (OVERCLOCK) — Thermal heat bloom + system strain
    ---------------------------------------------------------- */
 function eggCoffee() {
-  // Warm amber tint overlay
+  // Thermal tint overlay
   const glow = document.createElement('div');
   Object.assign(glow.style, {
     position: 'fixed', inset: '0',
-    background: 'radial-gradient(ellipse at 50% 100%, rgba(245,158,11,0.18) 0%, transparent 70%)',
+    background: 'radial-gradient(ellipse at center, rgba(239,68,68,0.05) 0%, rgba(220,38,38,0.2) 100%)',
     pointerEvents: 'none', zIndex: '99997',
     opacity: '0', transition: 'opacity 0.6s',
+    mixBlendMode: 'color-burn',
   });
   document.body.appendChild(glow);
   requestAnimationFrame(() => { glow.style.opacity = '1'; });
 
-  // Apply warm filter to body
-  document.body.style.transition = 'filter 0.5s';
-  document.body.style.filter = 'sepia(0.25) saturate(1.2) brightness(1.05)';
+  // Apply thermal distortion filter to body
+  document.body.style.transition = 'filter 1s ease-in-out';
+  document.body.style.filter = 'sepia(0.5) saturate(2) hue-rotate(-15deg) contrast(1.2)';
 
-  // Floating steam particles from bottom
-  const steamChars = ['~', '∿', '≈', '꩜', '☁'];
-  for (let i = 0; i < 20; i++) {
-    setTimeout(() => {
-      const p = document.createElement('div');
-      const startX = 30 + Math.random() * 40; // center cluster
-      const drift = (Math.random() - 0.5) * 120;
-      Object.assign(p.style, {
-        position: 'fixed',
-        bottom: '-30px',
-        left: startX + '%',
-        fontSize: (12 + Math.random() * 20) + 'px',
-        color: `rgba(245,158,11,${0.3 + Math.random() * 0.5})`,
-        textShadow: '0 0 12px rgba(245,158,11,0.6)',
-        pointerEvents: 'none',
-        zIndex: '99999',
-        transition: `bottom 2.5s ease-out, transform 2.5s ease-in-out, opacity 2.5s ease`,
-        opacity: '1',
-      });
-      p.textContent = steamChars[Math.floor(Math.random() * steamChars.length)];
-      document.body.appendChild(p);
-      requestAnimationFrame(() => {
-        p.style.bottom = (50 + Math.random() * 50) + 'vh';
-        p.style.transform = `translateX(${drift}px) scale(${0.5 + Math.random()}) rotate(${(Math.random() - 0.5) * 40}deg)`;
-        p.style.opacity = '0';
-      });
-      setTimeout(() => p.remove(), 2700);
-    }, i * 120);
+  // System Strain text
+  const alert = document.createElement('div');
+  Object.assign(alert.style, {
+    position: 'fixed', top: '10%', left: '50%',
+    transform: 'translateX(-50%)',
+    fontFamily: 'monospace', fontSize: '14px', fontWeight: 'bold',
+    color: '#ef4444', letterSpacing: '2px',
+    padding: '8px 16px', border: '1px solid #ef4444',
+    backgroundColor: 'rgba(20,0,0,0.8)',
+    textShadow: '0 0 10px #ef4444',
+    boxShadow: '0 0 20px rgba(239,68,68,0.4)',
+    pointerEvents: 'none', zIndex: '99999',
+    opacity: '0', transition: 'opacity 0.3s',
+  });
+  alert.innerHTML = '⚠️ THERMAL THRESHOLD EXCEEDED // OVERCLOCK ACTIVE';
+  document.body.appendChild(alert);
+  requestAnimationFrame(() => { alert.style.opacity = '1'; });
+
+  // Heat waves (distortion layers)
+  const tears = [];
+  for (let i = 0; i < 5; i++) {
+    const layer = document.createElement('div');
+    Object.assign(layer.style, {
+      position: 'fixed', left: '0', width: '100%', height: (10 + Math.random() * 30) + 'px',
+      top: (Math.random() * 100) + '%',
+      background: 'rgba(239,68,68,0.05)', backdropFilter: 'blur(2px)',
+      pointerEvents: 'none', zIndex: '99998', opacity: '0.4',
+      transform: `translateX(${(Math.random() - 0.5) * 20}px)`,
+    });
+    document.body.appendChild(layer);
+    tears.push(layer);
   }
 
-  // Big ☕ emoji that blooms from center
-  const cup = document.createElement('div');
-  Object.assign(cup.style, {
-    position: 'fixed', top: '50%', left: '50%',
-    transform: 'translate(-50%, -50%) scale(0)',
-    fontSize: '80px',
-    zIndex: '99999',
-    pointerEvents: 'none',
-    transition: 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s',
-    filter: 'drop-shadow(0 0 30px rgba(245,158,11,0.9))',
-    opacity: '0',
-  });
-  cup.textContent = '☕';
-  document.body.appendChild(cup);
-  requestAnimationFrame(() => {
-    cup.style.transform = 'translate(-50%, -50%) scale(1)';
-    cup.style.opacity = '1';
-  });
-  setTimeout(() => {
-    cup.style.transform = 'translate(-50%, -50%) scale(2)';
-    cup.style.opacity = '0';
-    setTimeout(() => cup.remove(), 500);
-  }, 1500);
+  const waveInt = setInterval(() => {
+    tears.forEach(t => {
+      t.style.top = (Math.random() * 100) + '%';
+      t.style.transform = `translateX(${(Math.random() - 0.5) * 30}px)`;
+    });
+  }, 100);
 
   // Clean up
   setTimeout(() => {
     document.body.style.filter = '';
     glow.style.opacity = '0';
-    setTimeout(() => glow.remove(), 600);
-  }, 3000);
+    alert.style.opacity = '0';
+    tears.forEach(t => t.style.opacity = '0');
+    clearInterval(waveInt);
+    setTimeout(() => {
+      glow.remove();
+      alert.remove();
+      tears.forEach(t => t.remove());
+    }, 1000);
+  }, 4000);
 }
 
 /* ----------------------------------------------------------
@@ -2206,8 +2325,8 @@ function eggPwned() {
 }
 
 /* ============================================================
-   EASTER EGG: TRIPLE-CLICK PARTICLE BURST
-   Triple-click anywhere to spray neon matrix particles
+   TRIPLE-CLICK: AUTHORIZATION FAILURE
+   Triple-click triggers a violent red glitch strobe
    ============================================================ */
 function initTripleClickBurst() {
   let clickCount = 0;
@@ -2219,84 +2338,53 @@ function initTripleClickBurst() {
     clickCount++;
     clearTimeout(clickTimer);
     clickTimer = setTimeout(() => { clickCount = 0; }, 500);
-    if (clickCount >= 3) { clickCount = 0; spawnBurst(e.clientX, e.clientY); }
+    if (clickCount >= 3) { clickCount = 0; triggerSecurityGlitch(); }
   });
 
-  function spawnBurst(x, y) {
-    const colors = ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
-    const matrixChars = '01アイウエカ#@$%!?';
-    const count = 36;
-
-    // Shockwave ring
-    const ring = document.createElement('div');
-    Object.assign(ring.style, {
-      position: 'fixed', left: x + 'px', top: y + 'px',
-      width: '0px', height: '0px',
-      borderRadius: '50%',
-      border: '2px solid #06b6d4',
-      boxShadow: '0 0 20px #06b6d4, inset 0 0 20px rgba(6,182,212,0.3)',
-      transform: 'translate(-50%, -50%)',
-      pointerEvents: 'none', zIndex: '99999',
-      transition: 'width 0.6s ease-out, height 0.6s ease-out, opacity 0.6s ease-out',
-      opacity: '1',
+  function triggerSecurityGlitch() {
+    const overlay = document.createElement('div');
+    Object.assign(overlay.style, {
+      position: 'fixed', inset: '0', zIndex: '999999',
+      background: 'rgba(239, 68, 68, 0.2)', pointerEvents: 'none',
+      mixBlendMode: 'difference',
     });
-    document.body.appendChild(ring);
-    requestAnimationFrame(() => {
-      ring.style.width = '220px';
-      ring.style.height = '220px';
-      ring.style.opacity = '0';
+
+    // Add warning text
+    const text = document.createElement('div');
+    Object.assign(text.style, {
+      position: 'fixed', top: '10%', right: '5%', zIndex: '999999',
+      color: '#ef4444', fontFamily: 'monospace', fontSize: '24px', fontWeight: 'bold',
+      textShadow: '0 0 10px #ef4444', pointerEvents: 'none',
     });
-    setTimeout(() => ring.remove(), 700);
+    text.textContent = 'ACCESS_DENIED // BRUTE_FORCE_DETECTED';
 
-    // Particles
-    for (let i = 0; i < count; i++) {
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-      const speed = 60 + Math.random() * 130;
-      const size = 5 + Math.random() * 9;
-      const isChar = Math.random() > 0.45;
-      const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+    document.body.appendChild(overlay);
+    document.body.appendChild(text);
 
-      const p = document.createElement('div');
-      Object.assign(p.style, {
-        position: 'fixed', left: x + 'px', top: y + 'px',
-        width: size + 'px', height: size + 'px',
-        borderRadius: isChar ? '2px' : '50%',
-        background: isChar ? 'transparent' : color,
-        color, fontSize: size + 'px',
-        fontFamily: 'monospace', fontWeight: '900',
-        boxShadow: isChar ? `0 0 ${size}px ${color}` : `0 0 ${size * 2}px ${color}`,
-        textShadow: `0 0 8px ${color}`,
-        pointerEvents: 'none', zIndex: '99999',
-        transform: 'translate(-50%, -50%) scale(1)',
-        opacity: '1',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      });
-      if (isChar) p.textContent = char;
+    let flashes = 0;
+    const interval = setInterval(() => {
+      overlay.style.opacity = flashes % 2 === 0 ? '1' : '0';
+      text.style.transform = `translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px)`;
+      document.body.style.transform = `translate(${Math.random() * 6 - 3}px, ${Math.random() * 6 - 3}px)`;
+      flashes++;
 
-      document.body.appendChild(p);
-
-      const dx = Math.cos(angle) * speed;
-      const dy = Math.sin(angle) * speed;
-      const rot = (Math.random() - 0.5) * 720;
-
-      requestAnimationFrame(() => {
-        p.style.transition = `transform 0.9s cubic-bezier(0.2,0.8,0.3,1), opacity 0.9s ease`;
-        p.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.2) rotate(${rot}deg)`;
-        p.style.opacity = '0';
-      });
-      setTimeout(() => p.remove(), 1000);
-    }
+      if (flashes > 12) {
+        clearInterval(interval);
+        overlay.remove();
+        text.remove();
+        document.body.style.transform = '';
+      }
+    }, 40);
   }
 }
 
+
 /* ============================================================
    EASTER EGG: IDLE / INACTIVITY
-   After 40s of no interaction — subtle ghost screensaver wave
+   After 40s of no interaction — automated terminal lockout sequence
    ============================================================ */
 function initIdleEasterEgg() {
   let idleTimer = null;
-  let shownCount = 0;
   let active = false;
 
   function resetTimer() {
@@ -2307,10 +2395,7 @@ function initIdleEasterEgg() {
   function fireIdle() {
     if (active) return;
     active = true;
-    shownCount++;
-
-    const effects = [idleGhostText, idleGlitchWave, idleMatrixPulse];
-    effects[shownCount % effects.length](() => { active = false; resetTimer(); });
+    idleLockoutWarning(() => { active = false; resetTimer(); });
   }
 
   ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt =>
@@ -2319,93 +2404,39 @@ function initIdleEasterEgg() {
   resetTimer();
 }
 
-function idleGhostText(done) {
-  const phrases = [
-    'still here?', 'ping...', 'are you awake?', '/dev/null', 'session idle',
-    'no activity detected', 'hello?', 'press any key...'
-  ];
-  const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+function idleLockoutWarning(done) {
   const el = document.createElement('div');
   Object.assign(el.style, {
     position: 'fixed', top: '50%', left: '50%',
     transform: 'translate(-50%, -50%)',
-    fontFamily: 'monospace', fontSize: 'clamp(1.5rem,5vw,3rem)',
-    color: 'rgba(59,130,246,0.0)', letterSpacing: '0.3em',
+    fontFamily: 'monospace', fontSize: 'clamp(1.5rem,3vw,2.5rem)',
+    color: 'rgba(239,68,68,0)', letterSpacing: '0.2em',
     pointerEvents: 'none', zIndex: '99999',
-    transition: 'color 1s, text-shadow 1s',
-    textTransform: 'uppercase',
+    transition: 'color 0.5s',
+    textTransform: 'uppercase', textAlign: 'center',
+    fontWeight: 'bold', textShadow: '0 0 10px #ef4444',
   });
-  el.textContent = phrase;
+  el.innerHTML = `SESSION_TIMEOUT_PENDING<br><span style="font-size:0.5em;opacity:0.7">TERMINAL CONNECTION LOST IN 3...</span>`;
   document.body.appendChild(el);
-  requestAnimationFrame(() => {
-    el.style.color = 'rgba(59,130,246,0.3)';
-    el.style.textShadow = '0 0 40px rgba(59,130,246,0.5)';
-  });
-  setTimeout(() => {
-    el.style.color = 'rgba(59,130,246,0)';
-    el.style.textShadow = '';
-    setTimeout(() => { el.remove(); done(); }, 1000);
-  }, 3000);
-}
 
-function idleGlitchWave(done) {
-  // Quick scanline wave across the whole screen
+  // Add a faint red tint
   const overlay = document.createElement('div');
   Object.assign(overlay.style, {
-    position: 'fixed', inset: '0',
-    background: 'repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(59,130,246,0.04) 3px, rgba(59,130,246,0.04) 4px)',
-    pointerEvents: 'none', zIndex: '99997',
-    opacity: '0', transition: 'opacity 0.3s',
+    position: 'fixed', inset: '0', background: 'rgba(239,68,68,0.05)',
+    pointerEvents: 'none', zIndex: '99998', opacity: '0', transition: 'opacity 0.5s'
   });
   document.body.appendChild(overlay);
-  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
 
-  let t = 0;
-  const tick = setInterval(() => {
-    t++;
-    overlay.style.backgroundPosition = `0 ${t * 2}px`;
-    if (t > 30) {
-      clearInterval(tick);
-      overlay.style.opacity = '0';
-      setTimeout(() => { overlay.remove(); done(); }, 400);
-    }
-  }, 50);
-}
-
-function idleMatrixPulse(done) {
-  // Brief matrix column flash once across screen
-  const canvas = document.createElement('canvas');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  Object.assign(canvas.style, {
-    position: 'fixed', inset: '0', zIndex: '99997',
-    pointerEvents: 'none', opacity: '0',
-    transition: 'opacity 0.4s',
+  requestAnimationFrame(() => {
+    el.style.color = 'rgba(239,68,68,0.8)';
+    overlay.style.opacity = '1';
   });
-  document.body.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-  const cols = Math.floor(canvas.width / 18);
-  const drops = Array.from({ length: cols }, () => -Math.random() * canvas.height / 18);
-  const chars = '01アカ#@';
-  requestAnimationFrame(() => { canvas.style.opacity = '1'; });
 
-  let frames = 0;
-  const tick = setInterval(() => {
-    frames++;
-    ctx.fillStyle = 'rgba(6,6,10,0.15)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.font = '16px monospace';
-    for (let i = 0; i < drops.length; i++) {
-      ctx.fillStyle = `rgba(59,130,246,${0.3 + Math.random() * 0.5})`;
-      ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 18, drops[i] * 18);
-      drops[i]++;
-    }
-    if (frames > 50) {
-      clearInterval(tick);
-      canvas.style.opacity = '0';
-      setTimeout(() => { canvas.remove(); done(); }, 500);
-    }
-  }, 40);
+  setTimeout(() => {
+    el.style.color = 'rgba(239,68,68,0)';
+    overlay.style.opacity = '0';
+    setTimeout(() => { el.remove(); overlay.remove(); done(); }, 500);
+  }, 3500);
 }
 
 /* ============================================================
@@ -2432,27 +2463,27 @@ function initLogoClickEgg() {
 
     if (clicks >= 5) {
       clicks = 0;
-      eggAccessGranted();
+      eggAccessFailed();
     }
   });
 }
 
-function eggAccessGranted() {
-  if (!document.getElementById('egg-access-style')) {
+function eggAccessFailed() {
+  if (!document.getElementById('egg-fail-style')) {
     const s = document.createElement('style');
-    s.id = 'egg-access-style';
+    s.id = 'egg-fail-style';
     s.textContent = `
-      @keyframes agScan { 0%{top:-5%} 100%{top:110%} }
-      @keyframes agPulse {
-        0%,100%{text-shadow:0 0 20px #10b981,0 0 60px #10b981}
-        50%{text-shadow:0 0 60px #10b981,0 0 120px #10b981,0 0 200px #10b981}
+      @keyframes failScan { 0%{top:-5%} 100%{top:110%} }
+      @keyframes failPulse {
+        0%,100%{text-shadow:0 0 20px #ef4444,0 0 60px #ef4444}
+        50%{text-shadow:0 0 60px #ef4444,0 0 120px #ef4444,0 0 200px #ef4444}
       }
-      @keyframes agFadeIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.9)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
-      .ag-scanline {
+      @keyframes failFadeIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.9)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+      .fail-scanline {
         position:absolute;left:0;width:100%;height:4px;
-        background:rgba(16,185,129,0.5);
-        box-shadow:0 0 20px rgba(16,185,129,0.9);
-        animation:agScan 1.4s linear infinite;
+        background:rgba(239,68,68,0.5);
+        box-shadow:0 0 20px rgba(239,68,68,0.9);
+        animation:failScan 1.4s linear infinite;
         pointer-events:none;
       }
     `;
@@ -2462,11 +2493,11 @@ function eggAccessGranted() {
   const overlay = document.createElement('div');
   Object.assign(overlay.style, {
     position: 'fixed', inset: '0',
-    background: 'rgba(6,6,10,0.97)',
+    background: 'rgba(20,0,0,0.97)',
     zIndex: '999999', cursor: 'pointer',
     overflow: 'hidden',
   });
-  overlay.innerHTML = `<div class="ag-scanline"></div>`;
+  overlay.innerHTML = `<div class="fail-scanline"></div>`;
   document.body.appendChild(overlay);
 
   const content = document.createElement('div');
@@ -2475,58 +2506,33 @@ function eggAccessGranted() {
     transform: 'translate(-50%, -50%)',
     textAlign: 'center', zIndex: '9999999',
     pointerEvents: 'none',
-    animation: 'agFadeIn 0.5s ease forwards',
+    animation: 'failFadeIn 0.5s ease forwards',
   });
   content.innerHTML = `
-    <div style="font-family:monospace;font-size:clamp(0.8rem,2vw,1rem);color:rgba(16,185,129,0.6);
-      letter-spacing:4px;margin-bottom:20px;">BIOMETRIC SCAN COMPLETE</div>
+    <div style="font-family:monospace;font-size:clamp(0.8rem,2vw,1rem);color:rgba(239,68,68,0.6);
+      letter-spacing:4px;margin-bottom:20px;">BIOMETRIC SCAN: UNRECOGNIZED</div>
     <div style="font-family:monospace;font-size:clamp(2rem,8vw,5rem);font-weight:900;
-      color:#10b981;letter-spacing:0.12em;
-      animation:agPulse 2s ease infinite;">
-      ACCESS GRANTED
+      color:#ef4444;letter-spacing:0.12em;
+      animation:failPulse 0.5s ease infinite;">
+      ACCESS DENIED
     </div>
     <div style="font-family:monospace;font-size:clamp(0.7rem,1.5vw,0.95rem);
-      color:#06b6d4;margin-top:20px;letter-spacing:3px;opacity:0.9;">
-      WELCOME TO THE INNER SANCTUM, HACKER.
+      color:#ef4444;margin-top:20px;letter-spacing:3px;opacity:0.9;">
+      THREAT NEUTRALIZATION PROTOCOLS ENGAGED.
     </div>
-    <div style="font-family:monospace;font-size:0.7rem;color:rgba(16,185,129,0.4);
-      margin-top:30px;letter-spacing:2px;">[ CLICK ANYWHERE TO EXIT ]</div>
+    <div style="font-family:monospace;font-size:0.7rem;color:rgba(239,68,68,0.4);
+      margin-top:30px;letter-spacing:2px;">[ CLICK TO ABORT SEQUENCE ]</div>
   `;
   document.body.appendChild(content);
 
-  // Green particle rain
-  const canvas = document.createElement('canvas');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  Object.assign(canvas.style, {
-    position: 'fixed', inset: '0', zIndex: '999998', pointerEvents: 'none',
-  });
-  document.body.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-  const cols = Math.floor(canvas.width / 16);
-  const drops = Array(cols).fill(0);
-  const chars = '01アカタナ#ACCESS';
-  const rain = setInterval(() => {
-    ctx.fillStyle = 'rgba(6,6,10,0.06)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.font = '14px monospace';
-    for (let i = 0; i < drops.length; i++) {
-      ctx.fillStyle = Math.random() > 0.95 ? '#fff' : (Math.random() > 0.6 ? '#10b981' : 'rgba(16,185,129,0.5)');
-      ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 16, drops[i] * 16);
-      if (drops[i] * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-      drops[i]++;
-    }
-  }, 35);
-
   const dismiss = () => {
-    clearInterval(rain);
-    [overlay, content, canvas].forEach(el => {
-      el.style.transition = 'opacity 0.5s';
+    [overlay, content].forEach(el => {
+      el.style.transition = 'opacity 0.2s';
       el.style.opacity = '0';
-      setTimeout(() => el.remove(), 500);
+      setTimeout(() => el.remove(), 200);
     });
   };
   overlay.addEventListener('click', dismiss);
-  setTimeout(dismiss, 6000);
+  setTimeout(dismiss, 4000);
 }
 
